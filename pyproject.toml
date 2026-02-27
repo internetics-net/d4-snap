@@ -1,0 +1,33 @@
+[project]
+name = "d4-snap"
+version = "0.1.2"
+description = "Clean, safe, professional snapshot manager"
+authors = [
+    { name = "Pedja Blagojevic", email = "pb@internetics.net" }
+]
+requires-python = ">=3.10"
+
+[project.scripts]
+d4-snap = "d4_snap.main:run"
+
+[tool.poetry]
+packages = [{include = "d4_snap", from = "src"}]
+
+[tool.poetry.dependencies]
+python = "^3.10"
+pyyaml = "^6.0.3"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+
+[tool.poetry.group.dev.dependencies]
+black = "^26.1.0"
+flake8 = "^7.3.0"
+fpdf = "^1.7.2"  # or the latest version
+ipykernel = "^6.29.5"
+pre-commit = "^4.5.1"
+pyinstaller = {version = "^6.18.0", python = ">=3.12,<3.15"}
+pytest = "^8.3.3"
+pytest-asyncio = "^0.23.0"

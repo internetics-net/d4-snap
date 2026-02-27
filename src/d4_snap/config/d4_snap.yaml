@@ -1,0 +1,71 @@
+main_menu:
+  title: "🚀 Git Checkpoint & Rollback Manager (Shadow Checkpoints)"
+  options:
+    - "1. Save Snapshot"
+    - "2. List / Manage Snapshots"
+    - "3. View Diff"
+    - "4. Restore Snapshot"
+    - "5. Cleanup Old Snapshots"
+    - "0. Exit"
+  prompt: "\nSelect an option (0-5): "
+
+manage_menu:
+  title: "\n--- Manage Snapshots ---"
+  options:
+    - "1. Toggle Favorite status"
+    - "2. Rename a snapshot"
+    - "3. Delete a snapshot"
+    - "0. Back to main menu"
+  prompt: "\nChoice (0-3): "
+
+save_snapshot:
+  title: "\n--- Save Work Snapshot (Shadow Repo) ---"
+  saving: "Saving snapshot..."
+  no_changes: "No changes to save."
+  success: "✅ Snapshot saved successfully! (Shadow hash: {hash})"
+
+restore_snapshot:
+  title: "\n--- Restore Snapshot (Shadow Repo) ---"
+  prompt_number: "\nEnter snapshot number to restore (or press Enter to cancel): "
+  options_title: "\nRestore Options:"
+  option_all: "1. Restore everything (Overwrite current working directory)"
+  option_specific: "2. Restore specific file/folder"
+  choice_prompt: "Choice (1-2): "
+  warning: "WARNING: This will overwrite your current uncommitted changes with snapshot {hash}. Continue? (y/n): "
+  success_all: "\n✅ Restored working directory to snapshot {hash}"
+  prompt_path: "Enter relative path to file/folder to restore: "
+  success_path: "\n✅ Restored '{path}' to snapshot {hash}"
+
+view_diff:
+  title: "\n--- View File Diff (Shadow Repo) ---"
+  prompt_number: "\nEnter snapshot number to compare (or press Enter to cancel): "
+  prompt_path: "Enter relative path to file/folder to view diff (leave blank for all): "
+  diff_title: "\nDiff between snapshot {hash} and current working directory:"
+
+list_snapshots:
+  no_snapshots: "No snapshots found."
+  title_grouped: "\n--- Shadow Snapshots (Grouped by Branch) ---"
+  title_normal: "\n--- Shadow Snapshots ---"
+  branch_prefix: "\n📁 Branch: {branch}"
+  header_grouped: "No.  Fav  Hash     Description"
+  header_normal: "No.  Fav  Hash     Branch               Description"
+  separator_grouped: "--------------------------------------------------"
+  separator_normal: "---------------------------------------------------------------------------"
+
+manage_snapshots:
+  prompt_number: "\nEnter snapshot number: "
+  favorite_added: "✅ {status} favorite for {hash}"
+  rename_prompt: "Enter new name for snapshot (current: {current}): "
+  rename_success: "✅ Snapshot renamed to '{name}'"
+  delete_warning: "⚠️ Cannot delete a favorite snapshot. Unfavorite it first."
+  delete_confirm: "Delete snapshot {hash}? (y/n): "
+  delete_success: "✅ Snapshot {hash} deleted (hidden)."
+
+cleanup:
+  title: "\n--- Auto-Cleanup Shadow Repo ---"
+  description: "This will remove snapshots older than 30 days that are not marked as favorites."
+  success: "✅ Cleanup complete."
+
+messages:
+  goodbye: "Goodbye!"
+  invalid_choice: "Invalid choice. Please try again."

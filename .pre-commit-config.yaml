@@ -1,0 +1,33 @@
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.5.0
+    hooks:
+      - id: trailing-whitespace
+        files: "^(src/.*\\.py|.*\\.yml|.*\\.yaml)$"
+      - id: end-of-file-fixer
+        files: "^(src/.*\\.py|.*\\.yml|.*\\.yaml)$"
+      - id: check-yaml
+        files: "^(.*\\.yml|.*\\.yaml)$"
+        args: ['--unsafe']
+      - id: check-added-large-files
+        files: "^(src/.*\\.py|.*\\.yml|.*\\.yaml)$"
+  - repo: local
+    hooks:
+      - id: black
+        name: black
+        entry: poetry run black
+        language: system
+        types: [python]
+        verbose: true
+      - id: flake8
+        name: flake8
+        entry: poetry run flake8
+        language: system
+        types: [python]
+        args: ['--exit-zero']
+        verbose: true
+  - repo: https://github.com/gitleaks/gitleaks
+    rev: v8.18.2
+    hooks:
+      - id: gitleaks
+        files: ".*"
