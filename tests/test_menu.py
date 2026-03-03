@@ -1,13 +1,6 @@
 """Tests for menu.py module"""
 
-import pytest
 from unittest.mock import patch, mock_open
-import yaml
-from pathlib import Path
-import sys
-
-# Add the parent directory to the path
-sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from d4_snap.menu import MenuManager
 

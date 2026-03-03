@@ -4,9 +4,8 @@ import pytest
 import tempfile
 import shutil
 from pathlib import Path
-from unittest.mock import patch, Mock
+from unittest.mock import Mock
 import sys
-import os
 
 # Add the parent directory to the path so we can import d4_snap
 sys.path.insert(0, str(Path(__file__).parent.parent))
@@ -113,7 +112,6 @@ def mock_git_operations():
 def mock_ui():
     """Create a mock UI instance"""
     from d4_snap.ui import UserInterface
-    from unittest.mock import Mock
 
     ui_mock = Mock(spec=UserInterface)
     # Add the menu_mgr attribute that the tests expect

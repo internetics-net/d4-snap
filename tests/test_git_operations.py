@@ -1,13 +1,8 @@
 """Tests for git_operations.py module"""
 
 import pytest
-from unittest.mock import patch, Mock, MagicMock
+from unittest.mock import patch, Mock
 import subprocess
-import tempfile
-import shutil
-from pathlib import Path
-import sys
-import os
 
 from d4_snap.git_operations import GitOperations, run_cmd
 
@@ -39,12 +34,11 @@ class TestGitOperations:
         """Test getting repository name when not in git repo"""
         git_ops = GitOperations()
 
-        with patch("d4_snap.git_operations.CHECKPOINT_DIR", mock_checkpoint_dir):
-            with patch("d4_snap.git_operations.Path.cwd", return_value=temp_dir):
-                with patch("d4_snap.git_operations.get_repo_root", return_value=""):
-                    repo_name = git_ops.get_repo_name()
+        with patch("d4_snap.git_operations.run_cmd") as mock_run:
+            mock_run.return_value = Mock(returncode=1, stdout="")
+            repo_name = git_ops.get_repo_name()
 
-                    assert repo_name is None
+            assert repo_name is None
 
     def test_get_repo_hash_success(self, mock_git_repo, mock_checkpoint_dir):
         """Test getting repository hash successfully"""
@@ -61,11 +55,11 @@ class TestGitOperations:
         """Test getting repository hash when not in git repo"""
         git_ops = GitOperations()
 
-        with patch("d4_snap.git_operations.CHECKPOINT_DIR", mock_checkpoint_dir):
-            with patch("d4_snap.git_operations.get_repo_root", return_value=""):
-                repo_hash = git_ops.get_repo_hash()
+        with patch("d4_snap.git_operations.run_cmd") as mock_run:
+            mock_run.return_value = Mock(returncode=1, stdout="")
+            repo_hash = git_ops.get_repo_hash()
 
-                assert repo_hash is None
+            assert repo_hash is None
 
     def test_init_bare_repo_success(self, mock_checkpoint_dir):
         """Test initializing bare repository successfully"""

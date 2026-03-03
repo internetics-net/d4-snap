@@ -1,12 +1,6 @@
 """Tests for cli.py module"""
 
-import pytest
 from unittest.mock import patch, Mock
-from pathlib import Path
-import sys
-
-# Add the parent directory to the path
-sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from d4_snap.cli import save_snapshot, list_snapshots, main
 
@@ -105,7 +99,7 @@ class TestCLI:
         # Mock user choosing to exit
         mock_menu_mgr_instance.display_and_get_choice.return_value = "0"
 
-        with patch("d4_snap.cli.save_snapshot") as mock_save:
+        with patch("d4_snap.cli.save_snapshot"):
             main()
 
         mock_menu_mgr_instance.print_message.assert_called_once_with(
@@ -135,7 +129,7 @@ class TestCLI:
         # Mock invalid choice, then exit
         mock_menu_mgr_instance.display_and_get_choice.side_effect = ["invalid", "0"]
 
-        with patch("d4_snap.cli.save_snapshot") as mock_save:
+        with patch("d4_snap.cli.save_snapshot"):
             main()
 
         mock_menu_mgr_instance.print_message.assert_any_call(

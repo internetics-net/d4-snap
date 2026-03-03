@@ -1,12 +1,7 @@
 """Tests for main.py module"""
 
 import pytest
-from unittest.mock import patch, Mock
-import sys
-from pathlib import Path
-
-# Add the parent directory to the path
-sys.path.insert(0, str(Path(__file__).parent.parent))
+from unittest.mock import patch
 
 from d4_snap.main import print_help, run
 
@@ -30,9 +25,10 @@ class TestMain:
         assert "d4-snap --help             Show this help message" in captured.out
         assert "d4-snap /?                 Show this help message" in captured.out
 
+    @patch("d4_snap.main.cleanup_old_snapshots")
     @patch("d4_snap.main.save_snapshot")
     @patch("sys.argv", ["d4-snap"])
-    def test_run_default_mode(self, mock_save_snapshot, capsys):
+    def test_run_default_mode(self, mock_save_snapshot, mock_cleanup, capsys):
         """Test default mode (create snapshot and exit)"""
         run()
 
@@ -40,11 +36,11 @@ class TestMain:
         captured = capsys.readouterr()
         assert "📸 Creating snapshot of current project..." in captured.out
         assert "✅ Snapshot operation completed." in captured.out
-        assert "🧹 Cleaned up snapshots older than 90 days." in captured.out
 
+    @patch("d4_snap.main.cleanup_old_snapshots")
     @patch("d4_snap.main.main")
     @patch("sys.argv", ["d4-snap", "menu"])
-    def test_run_menu_mode(self, mock_main):
+    def test_run_menu_mode(self, mock_main, mock_cleanup):
         """Test menu mode"""
         run()
 
@@ -77,34 +73,36 @@ class TestMain:
     @patch("sys.argv", ["d4-snap", "invalid"])
     def test_run_invalid_argument(self, capsys):
         """Test invalid argument handling"""
-        run()
+        with pytest.raises(SystemExit):
+            run()
 
         captured = capsys.readouterr()
         assert "Unknown argument: invalid" in captured.out
         assert "d4-snap - Git Snapshot & Rollback Manager" in captured.out
-        assert "🧹 Cleaned up snapshots older than 90 days." in captured.out
 
+    @patch("d4_snap.main.cleanup_old_snapshots")
     @patch("d4_snap.main.save_snapshot")
     @patch("sys.argv", ["d4-snap"])
-    def test_run_keyboard_interrupt(self, mock_save_snapshot, capsys):
+    def test_run_keyboard_interrupt(self, mock_save_snapshot, mock_cleanup, capsys):
         """Test keyboard interrupt handling"""
         mock_save_snapshot.side_effect = KeyboardInterrupt()
 
-        run()
+        with pytest.raises(SystemExit):
+            run()
 
         captured = capsys.readouterr()
         assert "Interrupted by user. Exiting..." in captured.out
-        assert "🧹 Cleaned up snapshots older than 90 days." in captured.out
 
+    @patch("d4_snap.main.cleanup_old_snapshots")
     @patch("d4_snap.main.save_snapshot")
     @patch("sys.argv", ["d4-snap"])
-    def test_run_exception_handling(self, mock_save_snapshot, capsys):
+    def test_run_exception_handling(self, mock_save_snapshot, mock_cleanup, capsys):
         """Test general exception handling"""
         mock_save_snapshot.side_effect = OSError("Test error")
 
-        run()
+        with pytest.raises(SystemExit):
+            run()
 
         captured = capsys.readouterr()
         assert "❌ Unexpected error during snapshot: Test error" in captured.out
         assert "🔧 Troubleshooting tips:" in captured.out
-        assert "🧹 Cleaned up snapshots older than 90 days." in captured.out

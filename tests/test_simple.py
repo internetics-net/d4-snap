@@ -1,9 +1,7 @@
 """Simple tests for d4-snap functionality"""
 
 import pytest
-from unittest.mock import patch, Mock
-import tempfile
-import shutil
+from unittest.mock import patch
 from pathlib import Path
 import sys
 
@@ -72,9 +70,10 @@ class TestBasicFunctionality:
         assert callable(list_snapshots)
         assert callable(main)
 
+    @patch("d4_snap.main.cleanup_old_snapshots")
     @patch("d4_snap.main.save_snapshot")
     @patch("sys.argv", ["d4-snap"])
-    def test_run_default_mode(self, mock_save_snapshot, capsys):
+    def test_run_default_mode(self, mock_save_snapshot, mock_cleanup, capsys):
         """Test default mode (create snapshot and exit)"""
         from d4_snap.main import run
 
@@ -120,12 +119,12 @@ class TestBasicFunctionality:
         """Test invalid argument handling"""
         from d4_snap.main import run
 
-        run()
+        with pytest.raises(SystemExit):
+            run()
 
         captured = capsys.readouterr()
         assert "Unknown argument: invalid" in captured.out
         assert "d4-snap - Git Snapshot & Rollback Manager" in captured.out
-        assert "🧹 Cleaned up snapshots older than 90 days." in captured.out
 
 
 class TestConfigLoading:

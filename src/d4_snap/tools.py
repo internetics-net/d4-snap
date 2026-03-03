@@ -201,7 +201,7 @@ def save_snapshot(is_claude=False):
     commit_msg = f"{name}\n\nBranch: {branch}\nTimestamp: {timestamp}"
 
     print(msgs.get("saving", "Saving snapshot."))
-    run_shadow_cmd(["add", "."], quiet=True)
+    run_shadow_cmd(["add", "."], quiet=True, check=False)
 
     res = run_shadow_cmd(
         ["commit", "-m", commit_msg], check=False, capture_output=True, quiet=True

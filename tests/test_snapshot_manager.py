@@ -1,11 +1,6 @@
 """Tests for snapshot_manager.py module"""
 
 from unittest.mock import patch, Mock
-from pathlib import Path
-import sys
-
-# Add the parent directory to the path
-sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from d4_snap.snapshot_manager import SnapshotManager
 
@@ -45,7 +40,12 @@ class TestSnapshotManager:
                     mock_rev_result.stdout = "abc123456789"
                     mock_rev_result.returncode = 0
 
-                    # Mock set_snapshot_metadata call (fourth call)
+                    # Mock _generate_ai_notes diff call (fourth call)
+                    mock_diff_result = Mock()
+                    mock_diff_result.returncode = 0
+                    mock_diff_result.stdout = "src/foo.py\nsrc/bar.py\n"
+
+                    # Mock set_snapshot_metadata call (fifth call)
                     mock_metadata_result = Mock()
                     mock_metadata_result.returncode = 0
 
@@ -53,6 +53,7 @@ class TestSnapshotManager:
                         mock_add_result,
                         mock_commit_result,
                         mock_rev_result,
+                        mock_diff_result,
                         mock_metadata_result,
                     ]
 

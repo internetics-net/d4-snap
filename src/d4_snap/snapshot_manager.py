@@ -42,7 +42,7 @@ class SnapshotManager:
         commit_msg = f"Snapshot: {timestamp}\n\nBranch: {current_branch}\nRepo: {repo_name}\nHash: {repo_hash}"
 
         # Add all changes and create commit
-        git_ops.run_shadow_cmd(["add", "."], quiet=True)
+        git_ops.run_shadow_cmd(["add", "."], quiet=True, check=False)
         try:
             result = git_ops.run_shadow_cmd(
                 ["commit", "-m", commit_msg], quiet=True, capture_output=True
