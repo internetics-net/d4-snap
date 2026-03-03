@@ -1,15 +1,17 @@
-# d4-snap – Git Snapshot & Rollback Manager
+# d4-snap – Snapshot & Rollback Manager
+
+Never lose your work again, **d4-snap** saves instant snapshots of your code so you can roll back to any moment with one command.
 
 **d4-snap** is a lightweight, local-only Git helper that gives you a simple, reproducible way to:
 
-* Keep *shadow checkpoints* – isolated snapshots that don't touch your main repo history
-* Quickly save your progress locally without making official Git commits
-* Restore your entire working directory or specific files to a previous snapshot
+* Keep *shadow checkpoints* – isolated snapshots that **don't touch your main repo** history
+* **Quickly save** your progress locally **without** making official **Git commits**
+* **Restore** your entire working **directory** or specific **files** to a **previous snapshot**
 * View diffs between snapshots and your current state
 * Manage snapshots with favorites, renaming, and deletion
 * Automatic snapshot cleanup when restoring
-* **NEW**: Automatic cleanup of snapshots older than 90 days on every exit
-* **NEW**: AI-powered Notes for each snapshot (up to 30 words summary of changed files)
+* Automatic cleanup of snapshots older than 90 days on every exit
+* AI-powered Notes for each snapshot (up to 30 words summary of changed files)
 
 > **Why d4-snap?**
 > The tool was built for developers who want a quick, interactive workflow to seamlessly save code iterations without cluttering the main repo. All operations happen locally in a hidden bare repo, so you can experiment freely and clean up with confidence.
