@@ -7,9 +7,7 @@ import tempfile
 import shutil
 from pathlib import Path
 import sys
-
-# Add the parent directory to the path
-sys.path.insert(0, str(Path(__file__).parent.parent))
+import os
 
 from d4_snap.git_operations import GitOperations, run_cmd
 
@@ -19,7 +17,7 @@ class TestGitOperations:
 
     def test_git_operations_init(self, mock_checkpoint_dir):
         """Test GitOperations initialization"""
-        git_ops = GitOperations()
+        git_ops = GitOperations(checkpoint_dir=mock_checkpoint_dir)
         assert git_ops.checkpoint_dir == mock_checkpoint_dir
 
     def test_get_repo_name_success(self, mock_git_repo, mock_checkpoint_dir):
@@ -27,7 +25,12 @@ class TestGitOperations:
         git_ops = GitOperations()
 
         with patch("d4_snap.git_operations.CHECKPOINT_DIR", mock_checkpoint_dir):
-            with patch("d4_snap.git_operations.Path.cwd", return_value=mock_git_repo):
+            with patch("d4_snap.git_operations.run_cmd") as mock_run_cmd:
+                # Mock the git command to return our test repo path
+                mock_run_cmd.return_value = Mock(
+                    returncode=0, stdout=str(mock_git_repo)
+                )
+
                 repo_name = git_ops.get_repo_name()
 
                 assert repo_name == "test_repo"
@@ -38,9 +41,10 @@ class TestGitOperations:
 
         with patch("d4_snap.git_operations.CHECKPOINT_DIR", mock_checkpoint_dir):
             with patch("d4_snap.git_operations.Path.cwd", return_value=temp_dir):
-                repo_name = git_ops.get_repo_name()
+                with patch("d4_snap.git_operations.get_repo_root", return_value=""):
+                    repo_name = git_ops.get_repo_name()
 
-                assert repo_name is None
+                    assert repo_name is None
 
     def test_get_repo_hash_success(self, mock_git_repo, mock_checkpoint_dir):
         """Test getting repository hash successfully"""
@@ -58,14 +62,14 @@ class TestGitOperations:
         git_ops = GitOperations()
 
         with patch("d4_snap.git_operations.CHECKPOINT_DIR", mock_checkpoint_dir):
-            with patch("d4_snap.git_operations.Path.cwd", return_value=temp_dir):
+            with patch("d4_snap.git_operations.get_repo_root", return_value=""):
                 repo_hash = git_ops.get_repo_hash()
 
                 assert repo_hash is None
 
     def test_init_bare_repo_success(self, mock_checkpoint_dir):
         """Test initializing bare repository successfully"""
-        git_ops = GitOperations()
+        git_ops = GitOperations(checkpoint_dir=mock_checkpoint_dir)
         bare_repo_path = mock_checkpoint_dir / "test_repo-hash"
 
         with patch("d4_snap.git_operations.run_cmd") as mock_run:
@@ -177,6 +181,7 @@ class TestGitOperations:
                 ["git", "rev-parse", "--abbrev-ref", "HEAD"],
                 capture_output=True,
                 quiet=True,
+                check=False,
             )
 
     def test_get_current_branch_failure(self, mock_checkpoint_dir):

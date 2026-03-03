@@ -4,12 +4,17 @@ import pytest
 import tempfile
 import shutil
 from pathlib import Path
-from unittest.mock import patch
+from unittest.mock import patch, Mock
 import sys
 import os
 
 # Add the parent directory to the path so we can import d4_snap
 sys.path.insert(0, str(Path(__file__).parent.parent))
+
+# Also add the src directory to the path so we can import d4_snap
+src_dir = str(Path(__file__).parent.parent / "src")
+if src_dir not in sys.path:
+    sys.path.insert(0, src_dir)
 
 
 @pytest.fixture
@@ -70,3 +75,47 @@ save_snapshot:
   no_changes: "No changes"
 """)
     return config_file
+
+
+@pytest.fixture
+def mock_checkpoint_dir(temp_dir):
+    """Create a mock checkpoint directory"""
+    checkpoint_dir = temp_dir / ".d4_snap"
+    checkpoint_dir.mkdir()
+    return checkpoint_dir
+
+
+@pytest.fixture
+def mock_menu_manager(mock_config_file):
+    """Create a mock MenuManager instance"""
+    from d4_snap.menu import MenuManager
+
+    return MenuManager(mock_config_file)
+
+
+@pytest.fixture
+def mock_snapshot_manager():
+    """Create a mock SnapshotManager instance"""
+    from d4_snap.snapshot_manager import SnapshotManager
+
+    return Mock(spec=SnapshotManager)
+
+
+@pytest.fixture
+def mock_git_operations():
+    """Create a mock GitOperations instance"""
+    from d4_snap.git_operations import GitOperations
+
+    return Mock(spec=GitOperations)
+
+
+@pytest.fixture
+def mock_ui():
+    """Create a mock UI instance"""
+    from d4_snap.ui import UserInterface
+    from unittest.mock import Mock
+
+    ui_mock = Mock(spec=UserInterface)
+    # Add the menu_mgr attribute that the tests expect
+    ui_mock.menu_mgr = Mock()
+    return ui_mock

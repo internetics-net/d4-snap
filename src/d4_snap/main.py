@@ -12,8 +12,12 @@ if __name__ == "__main__":
     # Add parent directory to path for direct execution
     sys.path.insert(0, str(Path(__file__).parent.parent))
     from d4_snap.cli import main, save_snapshot
+    from d4_snap.snapshot_manager import get_snapshot_manager
+    from d4_snap.tools import load_config
 else:
     from .cli import main, save_snapshot
+    from .snapshot_manager import get_snapshot_manager
+    from .tools import load_config
 
 
 def print_help():
@@ -52,9 +56,9 @@ def validate_argument(arg):
     if not isinstance(arg, str):
         return False
 
-    # Allow only alphanumeric characters, hyphens, and common help flags
-    # Reject potentially dangerous characters including spaces and shell operators
-    if re.search(r"[;&|`$(){}[\]<> \t\n\r]", arg):
+    # Use whitelist approach - only allow safe characters
+    # Allow alphanumeric, hyphens, underscores, and common help flags
+    if not re.match(r"^[a-zA-Z0-9\-_/?h]+$", arg):
         return False
 
     # Length limit to prevent buffer overflow attempts
@@ -62,6 +66,36 @@ def validate_argument(arg):
         return False
 
     return True
+
+
+def cleanup_old_snapshots():
+    """Cleanup snapshots older than configured days after an operation"""
+    try:
+        config = load_config()
+        auto_cleanup_config = config.get("auto_cleanup", {})
+
+        # Check if auto cleanup is enabled
+        if not auto_cleanup_config.get("enabled", True):
+            return
+
+        # Get cleanup days from config, default to 90
+        cleanup_days = auto_cleanup_config.get("auto_cleanup_days", 90)
+
+        # Validate cleanup_days parameter
+        if not isinstance(cleanup_days, int) or cleanup_days <= 0:
+            print(
+                f"⚠️  Invalid cleanup_days in config: {cleanup_days}. Using default 90."
+            )
+            cleanup_days = 90
+
+        snapshot_manager = get_snapshot_manager()
+        snapshot_manager.cleanup_very_old_snapshots(cleanup_days)
+    except (OSError, RuntimeError) as e:
+        # Don't let cleanup errors prevent the main operation
+        print(f"⚠️  Cleanup warning: {e}")
+    except ImportError as e:
+        # Handle import errors separately
+        print(f"⚠️  Import error during cleanup: {e}")
 
 
 def run():
@@ -80,7 +114,12 @@ def run():
             print_help()
             return
         elif arg == "menu":
-            main()
+            try:
+                main()
+            except KeyboardInterrupt:
+                print("\n\nInterrupted by user. Exiting...")
+            finally:
+                cleanup_old_snapshots()
             return
         else:
             print(f"Unknown argument: {arg}")
@@ -105,6 +144,8 @@ def run():
 
         traceback.print_exc()
         sys.exit(1)
+    finally:
+        cleanup_old_snapshots()
 
 
 if __name__ == "__main__":

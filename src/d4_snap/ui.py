@@ -62,70 +62,99 @@ class UserInterface:
         return self.menu_mgr.get_new_name_input(current_name)
 
     def display_snapshots(
-        self, snapshots: List[Dict[str, Any]], group_by_branch: bool = False
-    ):
+        self, snapshots: List[Dict[str, Any]], grouped: bool = False
+    ) -> None:
         """Display list of snapshots"""
         msgs = self.menu_mgr.get_menu_config("list_snapshots")
 
-        if group_by_branch:
-            branches = {}
-            for snap in snapshots:
-                branches.setdefault(snap["branch"], []).append(snap)
+        if not snapshots:
+            print(msgs.get("no_snapshots", "No snapshots found."))
+            return
 
-            print(
-                msgs.get(
-                    "title_grouped", "\n--- Shadow Snapshots (Grouped by Branch) ---"
-                )
-            )
+        if grouped:
+            # Group by branch
+            from collections import defaultdict
+
+            by_branch = defaultdict(list)
+            for snap in snapshots:
+                by_branch[snap["branch"]].append(snap)
+
             idx = 1
-            for br, snaps in branches.items():
+            for branch, snaps in sorted(by_branch.items()):
                 print(
-                    msgs.get("branch_prefix", "\n📁 Branch: {branch}").format(branch=br)
+                    msgs.get("branch_prefix", "\n📁 Branch: {branch}").format(
+                        branch=branch
+                    )
                 )
-                print(msgs.get("header_grouped", "No.  Fav  Hash     Description"))
                 print(msgs.get("separator_grouped", "-" * 50))
                 for snap in snaps:
                     fav_icon = "⭐" if snap["is_favorite"] else ""
-                    ai_icon = "🤖" if snap["is_ai"] else ""
+                    notes = snap.get("notes", "")
+                    notes_display = f" | {notes}" if notes else ""
                     print(
-                        f"{idx:<4} {fav_icon:<4} {snap['hash']:<8} {ai_icon} {snap['subject']}"
+                        f"{idx:<4} {fav_icon:<4} {snap['hash']:<8} {snap['subject']}{notes_display}"
                     )
                     idx += 1
         else:
+            # Normal display with Notes column
             print(msgs.get("title_normal", "\n--- Shadow Snapshots ---"))
             print(
                 msgs.get(
                     "header_normal",
-                    "No.  Fav  Hash     Branch               Description",
+                    "No.  Fav  Hash     Branch               Description                    Notes",
                 )
             )
-            print(msgs.get("separator_normal", "-" * 75))
+            print(msgs.get("separator_normal", "-" * 100))
             for i, snap in enumerate(snapshots):
                 fav_icon = "⭐" if snap["is_favorite"] else ""
-                ai_icon = "🤖 " if snap["is_ai"] else ""
+                notes = snap.get("notes", "")
+                # Truncate notes if too long
+                notes_display = notes[:27] + "..." if len(notes) > 30 else notes
                 print(
-                    f"{i+1:<4} {fav_icon:<4} {snap['hash']:<8} {snap['branch']:<20} {ai_icon}{snap['subject']}"
+                    f"{i+1:<4} {fav_icon:<4} {snap['hash']:<8} {snap['branch']:<20} {snap['subject']:<25} {notes_display:<30}"
                 )
 
     def display_manage_options(self):
         """Display snapshot management options"""
-        print("\n1. Toggle Favorite")
-        print("2. Rename Snapshot")
-        print("3. Delete Snapshot")
-        print("0. Back")
+        manage_menu = self.menu_mgr.get_menu_config("manage_menu")
+        for option in manage_menu.get(
+            "options",
+            [
+                "1. Toggle Favorite",
+                "2. Rename Snapshot",
+                "3. Delete Snapshot",
+                "0. Back",
+            ],
+        ):
+            print(option)
 
     def get_manage_option(self) -> str:
         """Get management option from user"""
-        return input("\nChoice (0-3): ").strip()
+        manage_menu = self.menu_mgr.get_menu_config("manage_menu")
+        return input(manage_menu.get("prompt", "\nChoice (0-3): ")).strip()
 
     def display_available_files(self, files: List[str], work_tree: str):
         """Display available files in a snapshot"""
-        print("\nAvailable files in this snapshot:")
+        restore_cfg = self.menu_mgr.get_menu_config("restore_snapshot")
+        print(
+            restore_cfg.get(
+                "available_files_title", "\nAvailable files in this snapshot:"
+            )
+        )
         for f in files[:15]:
             print(f"  - {f}")
         if len(files) > 15:
-            print(f"  ... and {len(files) - 15} more files")
-        print(f"\nHint: Enter paths relative to the working directory: {work_tree}")
+            print(
+                restore_cfg.get(
+                    "available_files_more", "  ... and {count} more files"
+                ).format(count=len(files) - 15)
+            )
+        print(
+            restore_cfg.get(
+                "available_files_hint",
+                "\nHint: Enter paths relative to the working directory: {work_tree}",
+            ).format(work_tree=work_tree)
+        )
 
     def display_error(self, message: str):
         """Display error message"""

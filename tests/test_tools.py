@@ -46,11 +46,11 @@ class TestTools:
         assert isinstance(CHECKPOINT_DIR, Path)
         assert ".d4_snap" in str(CHECKPOINT_DIR)
 
-    @patch("d4_snap.tools.Path")
-    def test_checkpoint_dir_structure(self, mock_path):
+    @patch("d4_snap.tools.Path.home")
+    def test_checkpoint_dir_structure(self, mock_home):
         """Test checkpoint directory structure"""
-        mock_home = Path("/mock/home")
-        mock_path.home.return_value = mock_home
+        mock_home_path = Path("/mock/home")
+        mock_home.return_value = mock_home_path
 
         # Re-import to test with mocked Path
         import importlib
@@ -58,8 +58,8 @@ class TestTools:
 
         importlib.reload(d4_snap.tools)
 
-        expected_path = mock_home / ".d4_snap" / ".d4_snap"
-        assert str(d4_snap.tools.CHECKPOINT_DIR) == str(expected_path)
+        expected_path = mock_home_path / ".d4_snap" / ".d4_snap"
+        assert d4_snap.tools.CHECKPOINT_DIR == expected_path
 
     def test_config_file_path(self):
         """Test config file path structure"""

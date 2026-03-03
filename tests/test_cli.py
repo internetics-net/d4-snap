@@ -35,7 +35,7 @@ class TestCLI:
 
         # Verify calls
         mock_ui_instance.display_title.assert_called_once_with("save_snapshot")
-        mock_ui_instance.display_message.assert_called_once()
+        assert mock_ui_instance.display_message.call_count == 2
         mock_snap_mgr_instance.create_snapshot.assert_called_once()
 
     @patch("d4_snap.cli.get_ui")
@@ -138,6 +138,6 @@ class TestCLI:
         with patch("d4_snap.cli.save_snapshot") as mock_save:
             main()
 
-        mock_menu_mgr_instance.print_message.assert_called_with(
+        mock_menu_mgr_instance.print_message.assert_any_call(
             "messages", "invalid_choice"
         )

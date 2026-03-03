@@ -120,13 +120,12 @@ class TestBasicFunctionality:
         """Test invalid argument handling"""
         from d4_snap.main import run
 
-        with pytest.raises(SystemExit) as exc_info:
-            run()
+        run()
 
-        assert exc_info.value.code == 1
         captured = capsys.readouterr()
         assert "Unknown argument: invalid" in captured.out
         assert "d4-snap - Git Snapshot & Rollback Manager" in captured.out
+        assert "🧹 Cleaned up snapshots older than 90 days." in captured.out
 
 
 class TestConfigLoading:

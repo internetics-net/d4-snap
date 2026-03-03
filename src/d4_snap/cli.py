@@ -169,13 +169,20 @@ def manage_snapshots():
 
 def cleanup_shadow_repo():
     """Cleanup old snapshots"""
+    from .tools import load_config
+
     ui = get_ui()
     snap_mgr = get_snapshot_manager()
 
     ui.display_title("cleanup")
     ui.display_message("cleanup", "description")
 
-    snap_mgr.cleanup_old_snapshots()
+    # Get manual cleanup days from config
+    config = load_config()
+    auto_cleanup_config = config.get("auto_cleanup", {})
+    manual_cleanup_days = auto_cleanup_config.get("manual_cleanup_days", 30)
+
+    snap_mgr.cleanup_very_old_snapshots(manual_cleanup_days)
     ui.display_message("cleanup", "success")
 
 

@@ -35,6 +35,9 @@ restore_snapshot:
   success_all: "\n✅ Restored working directory to snapshot {hash}"
   prompt_path: "Enter relative path to file/folder to restore: "
   success_path: "\n✅ Restored '{path}' to snapshot {hash}"
+  available_files_title: "\nAvailable files in this snapshot:"
+  available_files_more: "  ... and {count} more files"
+  available_files_hint: "\nHint: Enter paths relative to the working directory: {work_tree}"
 
 view_diff:
   title: "\n--- View File Diff (Shadow Repo) ---"
@@ -48,9 +51,9 @@ list_snapshots:
   title_normal: "\n--- Shadow Snapshots ---"
   branch_prefix: "\n📁 Branch: {branch}"
   header_grouped: "No.  Fav  Hash     Description"
-  header_normal: "No.  Fav  Hash     Branch               Description"
+  header_normal: "No.  Fav  Hash     Branch               Description                    Notes"
   separator_grouped: "--------------------------------------------------"
-  separator_normal: "---------------------------------------------------------------------------"
+  separator_normal: "----------------------------------------------------------------------------------------------------"
 
 manage_snapshots:
   prompt_number: "\nEnter snapshot number: "
@@ -65,6 +68,14 @@ cleanup:
   title: "\n--- Auto-Cleanup Shadow Repo ---"
   description: "This will remove snapshots older than 30 days that are not marked as favorites."
   success: "✅ Cleanup complete."
+
+# Cleanup configuration
+auto_cleanup:
+  enabled: true
+  # Days for automatic cleanup on every d4-snap execution
+  auto_cleanup_days: 90
+  # Days for manual cleanup from menu
+  manual_cleanup_days: 30
 
 messages:
   goodbye: "Goodbye!"

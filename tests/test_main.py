@@ -40,6 +40,7 @@ class TestMain:
         captured = capsys.readouterr()
         assert "📸 Creating snapshot of current project..." in captured.out
         assert "✅ Snapshot operation completed." in captured.out
+        assert "🧹 Cleaned up snapshots older than 90 days." in captured.out
 
     @patch("d4_snap.main.main")
     @patch("sys.argv", ["d4-snap", "menu"])
@@ -76,13 +77,12 @@ class TestMain:
     @patch("sys.argv", ["d4-snap", "invalid"])
     def test_run_invalid_argument(self, capsys):
         """Test invalid argument handling"""
-        with pytest.raises(SystemExit) as exc_info:
-            run()
+        run()
 
-        assert exc_info.value.code == 1
         captured = capsys.readouterr()
         assert "Unknown argument: invalid" in captured.out
         assert "d4-snap - Git Snapshot & Rollback Manager" in captured.out
+        assert "🧹 Cleaned up snapshots older than 90 days." in captured.out
 
     @patch("d4_snap.main.save_snapshot")
     @patch("sys.argv", ["d4-snap"])
@@ -90,23 +90,21 @@ class TestMain:
         """Test keyboard interrupt handling"""
         mock_save_snapshot.side_effect = KeyboardInterrupt()
 
-        with pytest.raises(SystemExit) as exc_info:
-            run()
+        run()
 
-        assert exc_info.value.code == 1
         captured = capsys.readouterr()
         assert "Interrupted by user. Exiting..." in captured.out
+        assert "🧹 Cleaned up snapshots older than 90 days." in captured.out
 
     @patch("d4_snap.main.save_snapshot")
     @patch("sys.argv", ["d4-snap"])
     def test_run_exception_handling(self, mock_save_snapshot, capsys):
         """Test general exception handling"""
-        mock_save_snapshot.side_effect = Exception("Test error")
+        mock_save_snapshot.side_effect = OSError("Test error")
 
-        with pytest.raises(SystemExit) as exc_info:
-            run()
+        run()
 
-        assert exc_info.value.code == 1
         captured = capsys.readouterr()
-        assert "❌ Unexpected error: Test error" in captured.out
-        assert "Traceback" in captured.out
+        assert "❌ Unexpected error during snapshot: Test error" in captured.out
+        assert "🔧 Troubleshooting tips:" in captured.out
+        assert "🧹 Cleaned up snapshots older than 90 days." in captured.out

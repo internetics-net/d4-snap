@@ -19,10 +19,21 @@ CONFIG_FILE = Path(__file__).parent / "config" / "d4_snap.yaml"
 
 
 def load_config():
-    if CONFIG_FILE.exists():
-        with open(CONFIG_FILE, "r", encoding="utf-8") as f:
-            return yaml.safe_load(f)
-    return {}
+    """Load configuration from YAML file with error handling"""
+    try:
+        if CONFIG_FILE.exists():
+            with open(CONFIG_FILE, "r", encoding="utf-8") as f:
+                config = yaml.safe_load(f)
+                if config is None:
+                    return {}
+                return config
+        else:
+            # Config file doesn't exist, return empty dict
+            return {}
+    except (IOError, yaml.YAMLError) as e:
+        # Log the error but don't crash the application
+        print(f"⚠️  Warning: Failed to load config file {CONFIG_FILE}: {e}")
+        return {}
 
 
 CONFIG = load_config()
@@ -30,6 +41,7 @@ CONFIG = load_config()
 
 
 def run_cmd(cmd, check=True, capture_output=False, quiet=False, binary=False):
+    """Execute shell command with proper error handling"""
     if not quiet:
         print(f"\n> {' '.join(cmd)}")
     result = subprocess.run(cmd, text=not binary, capture_output=capture_output)
@@ -43,6 +55,10 @@ def run_cmd(cmd, check=True, capture_output=False, quiet=False, binary=False):
                         stderr = stderr.decode("utf-8", errors="replace")
                     if stderr:
                         print(stderr, file=sys.stderr)
+        # Raise CalledProcessError as expected by the test
+        raise subprocess.CalledProcessError(
+            result.returncode, cmd, output=result.stdout, stderr=result.stderr
+        )
     return result
 
 
@@ -161,7 +177,7 @@ def get_snapshot_metadata(commit_hash):
             return json.loads(res.stdout.strip())
         except json.JSONDecodeError:
             pass
-    return {"favorite": False, "ai": False, "renamed": None, "deleted": False}
+    return {"favorite": False, "notes": "", "renamed": None, "deleted": False}
 
 
 def set_snapshot_metadata(commit_hash, metadata):
@@ -199,7 +215,7 @@ def save_snapshot(is_claude=False):
         ).stdout.strip()
         set_snapshot_metadata(
             commit_hash,
-            {"favorite": False, "ai": is_claude, "renamed": None, "deleted": False},
+            {"favorite": False, "notes": "", "renamed": None, "deleted": False},
         )
         print(
             msgs.get(
@@ -243,7 +259,8 @@ def list_snapshots(group_by_branch=False, show_ai=True):
         if meta.get("deleted", False):
             continue
 
-        if not show_ai and meta.get("ai", False):
+        # Note: show_ai parameter is kept for API compatibility but now filters by notes
+        if not show_ai and meta.get("notes", ""):
             continue
 
         display_name = meta.get("renamed") or subject
@@ -254,7 +271,7 @@ def list_snapshots(group_by_branch=False, show_ai=True):
                 "subject": display_name,
                 "branch": branch,
                 "is_favorite": meta.get("favorite", False),
-                "is_ai": meta.get("ai", False),
+                "notes": meta.get("notes", ""),
                 "timestamp": "unknown",  # We could extract from body if needed
             }
         )
@@ -276,9 +293,10 @@ def list_snapshots(group_by_branch=False, show_ai=True):
             print(msgs.get("separator_grouped", "-" * 50))
             for snap in snaps:
                 fav_icon = "⭐" if snap["is_favorite"] else ""
-                ai_icon = "🤖" if snap["is_ai"] else ""
+                notes = snap.get("notes", "")
+                notes_display = f" | {notes}" if notes else ""
                 print(
-                    f"{idx:<4} {fav_icon:<4} {snap['hash']:<8} {ai_icon} {snap['subject']}"
+                    f"{idx:<4} {fav_icon:<4} {snap['hash']:<8} {snap['subject']}{notes_display}"
                 )
                 flat_list.append(snap)
                 idx += 1
@@ -287,15 +305,18 @@ def list_snapshots(group_by_branch=False, show_ai=True):
         print(msgs.get("title_normal", "\n--- Shadow Snapshots ---"))
         print(
             msgs.get(
-                "header_normal", "No.  Fav  Hash     Branch               Description"
+                "header_normal",
+                "No.  Fav  Hash     Branch               Description                    Notes",
             )
         )
-        print(msgs.get("separator_normal", "-" * 75))
+        print(msgs.get("separator_normal", "-" * 100))
         for i, snap in enumerate(snapshots):
             fav_icon = "⭐" if snap["is_favorite"] else ""
-            ai_icon = "🤖 " if snap["is_ai"] else ""
+            notes = snap.get("notes", "")
+            # Truncate notes if too long
+            notes_display = notes[:27] + "..." if len(notes) > 30 else notes
             print(
-                f"{i+1:<4} {fav_icon:<4} {snap['hash']:<8} {snap['branch']:<20} {ai_icon}{snap['subject']}"
+                f"{i+1:<4} {fav_icon:<4} {snap['hash']:<8} {snap['branch']:<20} {snap['subject']:<25} {notes_display:<30}"
             )
         return snapshots
 
@@ -396,7 +417,7 @@ def restore_snapshot():
                     print(f"✅ File {path} restored successfully.")
                 else:
                     print("❌ Failed to restore file.")
-            except Exception as e:
+            except (OSError, subprocess.SubprocessError, tarfile.TarError) as e:
                 print(f"❌ Error restoring file: {e}")
 
 
@@ -406,7 +427,10 @@ def view_diff():
     if not snapshots:
         return
 
-    choice = input("\nEnter snapshot number to view diff: ").strip()
+    view_diff_cfg = CONFIG.get("view_diff", {})
+    choice = input(
+        view_diff_cfg.get("prompt_number", "\nEnter snapshot number to view diff: ")
+    ).strip()
     if not choice.isdigit() or int(choice) < 1 or int(choice) > len(snapshots):
         return
 
@@ -423,12 +447,15 @@ def manage_snapshots():
     if not snapshots:
         return
 
-    print("\n--- Manage Snapshots ---")
+    manage_menu = CONFIG.get("manage_menu", {})
+    manage_cfg = CONFIG.get("manage_snapshots", {})
+
+    print(manage_menu.get("title", "\n--- Manage Snapshots ---"))
     for i, snap in enumerate(snapshots, 1):
         status = "⭐" if snap["is_favorite"] else "   "
         print(f"{i}. {status} {snap['hash'][:7]} - {snap['subject']}")
 
-    choice = input("\nEnter snapshot number: ").strip()
+    choice = input(manage_cfg.get("prompt_number", "\nEnter snapshot number: ")).strip()
     if not choice.isdigit() or int(choice) < 1 or int(choice) > len(snapshots):
         return
 
@@ -436,12 +463,13 @@ def manage_snapshots():
     commit_hash = snap["hash"]
     meta = get_snapshot_metadata(commit_hash)
 
-    print("\n1. Toggle Favorite")
-    print("2. Rename Snapshot")
-    print("3. Delete Snapshot")
-    print("0. Back")
+    for option in manage_menu.get(
+        "options",
+        ["1. Toggle Favorite", "2. Rename Snapshot", "3. Delete Snapshot", "0. Back"],
+    ):
+        print(option)
 
-    opt = input("\nChoice (0-3): ").strip()
+    opt = input(manage_menu.get("prompt", "\nChoice (0-3): ")).strip()
     if opt == "1":
         meta["favorite"] = not meta.get("favorite", False)
         set_snapshot_metadata(commit_hash, meta)
@@ -454,26 +482,49 @@ def manage_snapshots():
         else:
             run_shadow_cmd(["tag", "-d", tag_name], check=False, quiet=True)
 
-        print(f"✅ {status} favorite for {commit_hash}")
+        print(
+            manage_cfg.get("favorite_added", "✅ {status} favorite for {hash}").format(
+                status=status, hash=commit_hash
+            )
+        )
 
     elif opt == "2":
         new_name = input(
-            f"Enter new name for snapshot (current: {snap['subject']}): "
+            manage_cfg.get(
+                "rename_prompt", "Enter new name for snapshot (current: {current}): "
+            ).format(current=snap["subject"])
         ).strip()
         if new_name:
             meta["renamed"] = new_name
             set_snapshot_metadata(commit_hash, meta)
-            print(f"✅ Snapshot renamed to '{new_name}'")
+            print(
+                manage_cfg.get(
+                    "rename_success", "✅ Snapshot renamed to '{name}'"
+                ).format(name=new_name)
+            )
 
     elif opt == "3":
         if meta.get("favorite", False):
-            print("⚠️ Cannot delete a favorite snapshot. Unfavorite it first.")
+            print(
+                manage_cfg.get(
+                    "delete_warning",
+                    "⚠️ Cannot delete a favorite snapshot. Unfavorite it first.",
+                )
+            )
             return
-        confirm = input(f"Delete snapshot {commit_hash}? (y/n): ").strip()
+        confirm = input(
+            manage_cfg.get("delete_confirm", "Delete snapshot {hash}? (y/n): ").format(
+                hash=commit_hash
+            )
+        ).strip()
         if confirm.lower() == "y":
             meta["deleted"] = True
             set_snapshot_metadata(commit_hash, meta)
-            print(f"✅ Snapshot {commit_hash} deleted (hidden).")
+            print(
+                manage_cfg.get(
+                    "delete_success", "✅ Snapshot {hash} deleted (hidden)."
+                ).format(hash=commit_hash)
+            )
 
 
 def cleanup_shadow_repo():
