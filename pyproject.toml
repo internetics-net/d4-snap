@@ -5,6 +5,7 @@ description = "Clean, safe, professional snapshot manager"
 authors = [
     { name = "Pedja Blagojevic", email = "pb@internetics.net" }
 ]
+readme = "README.md"
 requires-python = ">=3.10"
 
 [project.scripts]
