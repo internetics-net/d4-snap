@@ -47,8 +47,24 @@ jobs:
       - name: Install dependencies
         run: poetry install --no-interaction
 
+      - name: Get version and OS info
+        id: meta
+        run: |
+          $version = (Select-String -Path pyproject.toml -Pattern '^version = "(.+)"').Matches.Groups[1].Value
+          $build = [System.Environment]::OSVersion.Version.Build
+          $osTag = if ($build -ge 22000) { "win11" } else { "win10" }
+          $arch = if ([System.Environment]::Is64BitOperatingSystem) { "x64" } else { "x86" }
+          echo "VERSION=$version" >> $env:GITHUB_OUTPUT
+          echo "OS_TAG=$osTag" >> $env:GITHUB_OUTPUT
+          echo "ARCH=$arch" >> $env:GITHUB_OUTPUT
+
       - name: Build EXE with PyInstaller
         run: poetry run pyinstaller d4-snap.spec --clean --distpath bin
+
+      - name: Rename EXE
+        run: |
+          $name = "d4-snap-${{ steps.meta.outputs.VERSION }}-${{ steps.meta.outputs.OS_TAG }}-${{ steps.meta.outputs.ARCH }}.exe"
+          Rename-Item -Path "bin/d4-snap.exe" -NewName $name
 
       - name: Upload EXE as artifact
         uses: actions/upload-artifact@v4
