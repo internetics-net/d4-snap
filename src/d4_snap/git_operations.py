@@ -13,6 +13,8 @@ import tempfile
 from pathlib import Path
 from typing import Dict, Any, Tuple, Optional, List
 
+from .path_safety import is_safe_relative_path, is_within_directory, resolve_under_root
+
 # --- Shadow Git Checkpoints Config ---
 CHECKPOINT_DIR = Path.home() / ".d4_snap" / ".d4_snap"
 
@@ -85,25 +87,22 @@ def safe_extract_tar(tar: tarfile.TarFile, path: str) -> None:
     Safely extract tar archive, preventing path traversal and symlink attacks.
     Raises RuntimeError if any member would escape the target path.
     """
-    abs_path = os.path.abspath(path)
+    base = Path(path).resolve()
 
     for member in tar.getmembers():
-        member_path = os.path.abspath(os.path.join(abs_path, member.name))
-
-        if not member_path.startswith(abs_path + os.sep) and member_path != abs_path:
+        member_path = (base / member.name).resolve()
+        if not is_within_directory(member_path, base):
             raise RuntimeError(f"Path traversal detected in tar: {member.name}")
 
         if member.islnk() or member.issym():
-            link_target = member.linkname
-            target_path = os.path.abspath(
-                os.path.join(os.path.dirname(member_path), link_target)
-            )
-            if (
-                not target_path.startswith(abs_path + os.sep)
-                and target_path != abs_path
-            ):
+            link_target = Path(member.linkname)
+            if link_target.is_absolute():
+                target_path = link_target.resolve()
+            else:
+                target_path = (member_path.parent / member.linkname).resolve()
+            if not is_within_directory(target_path, base):
                 raise RuntimeError(
-                    f"Symlink escape detected in tar: {member.name} -> {link_target}"
+                    f"Symlink escape detected in tar: {member.name} -> {member.linkname}"
                 )
 
     tar.extractall(path=path)
@@ -239,8 +238,13 @@ def extract_file_from_snapshot(
     commit_hash: str, file_path: str, work_tree: str
 ) -> bool:
     """Extract a specific file from snapshot"""
+    resolved = resolve_under_root(Path(work_tree), file_path)
+    if resolved is None:
+        return False
+
+    safe_path = resolved.relative_to(Path(work_tree).resolve()).as_posix()
     result = run_shadow_cmd(
-        ["show", f"{commit_hash}:{file_path}"],
+        ["show", f"{commit_hash}:{safe_path}"],
         capture_output=True,
         check=False,
         quiet=True,
@@ -251,9 +255,8 @@ def extract_file_from_snapshot(
         if content is None:
             return False
 
-        full_path = os.path.join(work_tree, file_path)
         try:
-            atomic_write_file(full_path, content)
+            atomic_write_file(str(resolved), content)
             return True
         except (OSError, TypeError):
             return False
@@ -263,6 +266,8 @@ def extract_file_from_snapshot(
 def show_diff(commit_hash: str, path: Optional[str] = None) -> None:
     """Show diff between snapshot and current working directory"""
     if path:
+        if not is_safe_relative_path(path):
+            return
         run_shadow_cmd(["diff", commit_hash, "--", path], check=False, quiet=False)
     else:
         run_shadow_cmd(["diff", commit_hash], check=False, quiet=False)

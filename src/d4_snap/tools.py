@@ -13,6 +13,9 @@ import uuid
 
 import yaml
 
+from d4_snap.git_operations import safe_extract_tar
+from d4_snap.path_safety import is_safe_relative_path
+
 # --- Shadow Git Checkpoints Config ---
 CHECKPOINT_DIR = Path.home() / ".d4_snap" / ".d4_snap"
 CONFIG_FILE = Path(__file__).parent / "config" / "d4_snap.yaml"
@@ -83,35 +86,6 @@ def get_repo_root():
 
 
 # --- Helper Functions for Security and Atomicity ---
-
-
-def _safe_extract_tar(tar, path):
-    """
-    Safely extract tar archive, preventing path traversal and symlink attacks.
-    Raises RuntimeError if any member would escape the target path.
-    """
-    abs_path = os.path.abspath(path)
-
-    for member in tar.getmembers():
-        member_path = os.path.abspath(os.path.join(abs_path, member.name))
-
-        if not member_path.startswith(abs_path + os.sep) and member_path != abs_path:
-            raise RuntimeError(f"Path traversal detected in tar: {member.name}")
-
-        if member.islnk() or member.issym():
-            link_target = member.linkname
-            target_path = os.path.abspath(
-                os.path.join(os.path.dirname(member_path), link_target)
-            )
-            if (
-                not target_path.startswith(abs_path + os.sep)
-                and target_path != abs_path
-            ):
-                raise RuntimeError(
-                    f"Symlink escape detected in tar: {member.name} -> {link_target}"
-                )
-
-    tar.extractall(path=path)
 
 
 def _atomic_write_file(file_path, content):
@@ -379,7 +353,7 @@ def restore_snapshot():
 
                 try:
                     with tarfile.open(tmp_path, "r") as tar:
-                        tar.extractall(path=work_tree)
+                        safe_extract_tar(tar, work_tree)
                 finally:
                     os.unlink(tmp_path)
 
@@ -391,6 +365,9 @@ def restore_snapshot():
         # Restore specific file
         path = input("Enter file path to restore: ").strip()
         if path:
+            if not is_safe_relative_path(path):
+                print("❌ Invalid file path.")
+                return
             try:
                 # Extract specific file
                 _, work_tree = get_shadow_repo_path()
@@ -410,14 +387,19 @@ def restore_snapshot():
 
                     try:
                         with tarfile.open(tmp_path, "r") as tar:
-                            tar.extractall(path=work_tree)
+                            safe_extract_tar(tar, work_tree)
                     finally:
                         os.unlink(tmp_path)
 
                     print(f"✅ File {path} restored successfully.")
                 else:
                     print("❌ Failed to restore file.")
-            except (OSError, subprocess.SubprocessError, tarfile.TarError) as e:
+            except (
+                OSError,
+                subprocess.SubprocessError,
+                tarfile.TarError,
+                RuntimeError,
+            ) as e:
                 print(f"❌ Error restoring file: {e}")
 
 
