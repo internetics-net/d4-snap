@@ -34,7 +34,7 @@ Run all commands from inside a Git repository.
 
 ## Why d4-snap?
 
-Developers often want to save progress without cluttering the main branch with WIP commits. **d4-snap** stores snapshots in an isolated **bare Git repo** under `~/.d4_snap/.d4_snap/<repo-name>-<hash>`. Your primary repository history stays untouched; you can experiment, roll back, and clean up with confidence.
+Developers often want to save progress without cluttering the main branch with WIP commits. **d4-snap** stores snapshots in an isolated **bare Git repo** under `~/.d4/d4_snap/<repo-name>-<hash>`. Your primary repository history stays untouched; you can experiment, roll back, and clean up with confidence.
 
 ## Features
 
@@ -115,7 +115,7 @@ ui.py / menu.py  Interactive prompts and display
 tools.py         Config loading (yaml.safe_load)
 ```
 
-Shadow repo path: `~/.d4_snap/.d4_snap/<repo-basename>-<md5-hash[:12]>`
+Shadow repo path: `~/.d4/d4_snap/<repo-basename>-<md5-hash[:12]>`
 
 ## Security
 
@@ -178,7 +178,7 @@ Coverage includes CLI, git operations, snapshot manager, UI, config loading, and
 
 | Question | Answer |
 |----------|--------|
-| Do snapshots affect my Git history? | No. They live in a separate bare repo under `~/.d4_snap`. |
+| Do snapshots affect my Git history? | No. They live in a separate bare repo under `~/.d4/d4_snap`. |
 | Can I share snapshots? | Local only. Export the shadow folder or use `git bundle` on the bare repo. |
 | What happens on full restore? | The restored snapshot and all newer snapshots are deleted automatically. |
 | How do I keep a snapshot forever? | Mark it as a favorite in the manage menu. |
@@ -190,7 +190,7 @@ Coverage includes CLI, git operations, snapshot manager, UI, config loading, and
 |---------|-----|
 | `d4-snap: command not found` | Ensure your Python scripts directory (e.g. `~/.local/bin`) is on `PATH`. |
 | `fatal: not a git repository` | `cd` into a Git repo first. |
-| `Permission denied` on `~/.d4_snap` | Fix directory permissions (e.g. `chmod -R 700 ~/.d4_snap` on Unix). |
+| `Permission denied` on `~/.d4/d4_snap` | Fix directory permissions (e.g. `chmod -R 700 ~/.d4/d4_snap` on Unix). |
 | Restore rejected for a path | Use a repo-relative path with no `..` segments. |
 
 ## Contributing

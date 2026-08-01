@@ -79,8 +79,8 @@ save_snapshot:
 @pytest.fixture
 def mock_checkpoint_dir(temp_dir):
     """Create a mock checkpoint directory"""
-    checkpoint_dir = temp_dir / ".d4_snap"
-    checkpoint_dir.mkdir()
+    checkpoint_dir = temp_dir / ".d4" / "d4_snap"
+    checkpoint_dir.mkdir(parents=True)
     return checkpoint_dir
 
 

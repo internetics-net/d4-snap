@@ -16,7 +16,8 @@ from typing import Dict, Any, Tuple, Optional, List
 from .path_safety import is_safe_relative_path, is_within_directory, resolve_under_root
 
 # --- Shadow Git Checkpoints Config ---
-CHECKPOINT_DIR = Path.home() / ".d4_snap" / ".d4_snap"
+# All snapshots live under ~/.d4/d4_snap/<repo-name>-<hash>/
+CHECKPOINT_DIR = Path.home() / ".d4" / "d4_snap"
 
 
 def run_cmd(

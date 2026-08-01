@@ -17,7 +17,8 @@ from d4_snap.git_operations import safe_extract_tar
 from d4_snap.path_safety import is_safe_relative_path
 
 # --- Shadow Git Checkpoints Config ---
-CHECKPOINT_DIR = Path.home() / ".d4_snap" / ".d4_snap"
+# Keep in sync with git_operations.CHECKPOINT_DIR (~/.d4/d4_snap).
+CHECKPOINT_DIR = Path.home() / ".d4" / "d4_snap"
 CONFIG_FILE = Path(__file__).parent / "config" / "d4_snap.yaml"
 
 
