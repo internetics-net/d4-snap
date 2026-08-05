@@ -1,0 +1,20 @@
+---
+description: After code changes, review for bugs and fix them before finishing
+alwaysApply: true
+---
+
+# 020 — Review for bugs before return
+
+After any code change, and **before** the final reply to the user:
+
+1. Re-read the diff you introduced (and immediate call sites) for defects.
+2. Check especially for:
+   - Logic / off-by-one / wrong defaults
+   - Missing null/empty/error handling on new paths
+   - Broken contracts (return types, kwargs, side effects)
+   - Race / ordering / cache freshness issues
+   - Security: path traversal, secret leakage, unsafe YAML/load
+   - Resource leaks (files, connections) and incorrect cleanup
+3. **Fix** clear bugs in the changed code before finishing.
+4. If a suspected bug is outside the change scope or needs a product decision, call it out briefly in the reply — do not silently leave a known defect in code you just wrote.
+5. Prefer a targeted fix over a large refactor.

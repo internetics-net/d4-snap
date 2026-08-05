@@ -1,0 +1,19 @@
+---
+description: After code changes, apply clear local improvements before finishing
+alwaysApply: true
+---
+
+# 030 — Review for enhancements before return
+
+After any code change, and **before** the final reply to the user:
+
+1. Review **only the code you touched** (and thin wrappers you added) for clear improvements.
+2. Apply improvements when they are local, low-risk, and clearly better:
+   - Remove duplication introduced by the change
+   - Tighten names, types, and docstrings to match behavior
+   - Prefer existing project helpers over one-off copies
+   - Reduce noise (redundant checks, dead code you added)
+   - Align with nearby style and patterns in the same module
+3. Do **not** expand into drive-by refactors of unrelated files or speculative redesigns.
+4. Do **not** add features, abstractions, or tests the user did not ask for unless needed to keep the change correct/safe.
+5. If a larger enhancement is worth doing later, mention it briefly; do not implement it in the same pass unless it is a small fix-up of the current change.

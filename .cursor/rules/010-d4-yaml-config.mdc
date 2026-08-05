@@ -1,0 +1,54 @@
+---
+description: How d4 YamlClass loads/merges config (env → home → module). Always apply for d4-family YAML work.
+alwaysApply: true
+---
+
+# d4 YAML configuration (`YamlClass`)
+
+Canonical doc: [`docs/D4_YAML.md`](../../docs/D4_YAML.md) · implementation: `src/d4/base/d4_yaml.py`.
+
+## Precedence (highest wins)
+
+1. **Environment variable** — overrides an **existing leaf** only
+2. **Home YAML** — deep-merged when present
+3. **Module YAML** — packaged/repo default under `config/`
+
+```text
+result = module_yaml
+result = deep_merge(result, home_yaml)   # optional
+result = apply_env_overrides(result)     # leaf keys only
+```
+
+Missing module YAML → `FileNotFoundError`. Missing home/env is OK.
+
+## Paths
+
+| Layer | Location |
+|-------|----------|
+| Module | `config/<file>.yaml` (cwd / package / class-adjacent); no absolutes, no `..` |
+| Home (`get_yaml`) | `~/.{config_name}/config/{config_name}.yaml` |
+| d4-family seed | `~/.d4/{module}/.../config/*.yaml` — **copy once**, never overwrite user files |
+
+`YamlClass` does **not** create/copy home files; packages seed their own trees.
+
+## Env overrides
+
+- Dotted uppercase paths: `SECTION.SUB.KEY` (preferred) or `{YAML_STEM}.SECTION.SUB.KEY`
+- **Not** underscore-joined (`PROVIDERS_REGISTRY_...` is wrong)
+- Underscores **inside** key names are kept (`AZURE_OPEN_AI`)
+- Env cannot invent new keys; type-coerced to existing YAML type
+- Optional `${VAR}` in YAML text via `pyaml-env` (fallback: `yaml.safe_load`)
+
+## Development rules
+
+- Load config with `YamlClass().get_yaml(...)` — not ad-hoc `open` + `yaml.safe_load` for app config
+- Prefer `safe_load` for raw strings; strip logger/stdout pollution if decrypting secrets
+- Secrets → env or `~/.d4/env/...` / PGP — not committed module YAML
+- When adding config keys: put defaults in **module** YAML; document env dotted path; allow home override
+- Deep merge: nested dicts recurse; lists/scalars replaced wholesale
+
+```python
+from d4.base.d4_yaml import YamlClass
+cfg = YamlClass().get_yaml("myconfig.yaml")
+# or YamlClass().get_yaml(SomeClass)  # → config/<ClassName>.yaml + ~/.SomeClass/...
+```

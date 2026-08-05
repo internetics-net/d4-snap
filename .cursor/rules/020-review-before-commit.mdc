@@ -1,0 +1,11 @@
+---
+description: Require explicit user review before any git commit or push
+alwaysApply: true
+---
+
+# Review before commit
+
+- Never run `git commit`, `git push`, or create a PR unless the user explicitly asks in the current message.
+- After making code changes, summarize what changed and point the user to the diff (Source Control / `git diff`) so they can review before committing.
+- If the user asks to commit, show the planned commit message and affected files first; wait for confirmation if they asked to review changes first.
+- Do not amend, force-push, or skip hooks unless the user explicitly requests it.

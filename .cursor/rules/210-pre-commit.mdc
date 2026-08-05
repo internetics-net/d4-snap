@@ -1,0 +1,19 @@
+---
+description: After code changes, run pre-commit on all files and fix failures before finishing
+alwaysApply: true
+---
+
+# 010 — Pre-commit before return
+
+After any code change in this repo, and **before** the final reply to the user:
+
+1. From the repo root, run:
+   ```bash
+   pre-commit run --all-files
+   ```
+2. If any hook fails, **fix the findings** (format, lint, trailing whitespace, etc.).
+3. Re-run `pre-commit run --all-files` until it passes (or until remaining failures need an explicit user decision).
+4. Do **not** skip hooks with `--no-verify` / `SKIP=` unless the user explicitly asked.
+5. This does **not** create a git commit — only validates/fixes local files. Commits still require an explicit user request (see `review-before-commit.mdc`).
+
+If `pre-commit` is not installed, say so briefly and install/use the project’s documented path (e.g. `poetry run pre-commit` / venv) when available.
