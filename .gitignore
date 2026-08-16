@@ -181,3 +181,5 @@ cython_debug/
 .cursorignore
 .cursorindexingignore
 /bin
+AGENTS.md
+CLAUDE.md
