@@ -30,8 +30,7 @@ fpdf = "^1.7.2"  # or the latest version
 ipykernel = "^6.29.5"
 pre-commit = "^4.5.1"
 pyinstaller = {version = "^6.18.0", python = ">=3.12,<3.15"}
-pytest = "^8.3.3"
-pytest-asyncio = "^0.25.3"
+pytest = "^9.0.3"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
