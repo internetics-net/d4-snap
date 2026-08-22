@@ -253,3 +253,30 @@ class TestRunCmd:
             mock_run.assert_called_with(
                 ["echo", "test"], text=False, capture_output=False
             )
+
+
+class TestStageWorktreeForSnapshot:
+    """Tests for ignore-aware snapshot staging."""
+
+    def test_stage_worktree_for_snapshot_unstages_gitignored(self):
+        from d4_snap.git_operations import stage_worktree_for_snapshot
+
+        with patch("d4_snap.git_operations.run_shadow_cmd") as mock_shadow:
+            mock_shadow.side_effect = [
+                Mock(returncode=0),  # add -A
+                Mock(returncode=0, stdout=".venv/lib/site.py\n"),  # ls-files -ci
+                Mock(
+                    returncode=0, stdout="src/main.py\n.venv/lib/site.py\n"
+                ),  # ls-files
+                Mock(returncode=0),  # reset chunk
+            ]
+            with patch("d4_snap.git_operations.get_shadow_repo_path") as mock_paths:
+                mock_paths.return_value = ("/shadow", "/work/tree")
+                with patch("d4_snap.git_paths.gitignored_rel_paths") as mock_ignored:
+                    mock_ignored.return_value = {".venv/lib/site.py"}
+                    stage_worktree_for_snapshot()
+
+            calls = [call.args[0] for call in mock_shadow.call_args_list]
+            assert calls[0][:3] == ["add", "-A", "--ignore-errors"]
+            assert calls[-1][0] == "reset"
+            assert ".venv/lib/site.py" in calls[-1]

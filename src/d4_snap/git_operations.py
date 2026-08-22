@@ -169,6 +169,64 @@ def run_shadow_cmd(
     )
 
 
+def stage_worktree_for_snapshot() -> None:
+    """Stage working-tree changes for a snapshot, respecting .gitignore."""
+    from .git_paths import gitignored_rel_paths
+
+    _, work_tree = get_shadow_repo_path()
+    project_root = Path(work_tree).resolve()
+
+    run_shadow_cmd(
+        ["add", "-A", "--ignore-errors", "--", "."],
+        quiet=True,
+        check=False,
+    )
+
+    to_unstage: list[str] = []
+
+    ignored_tracked = run_shadow_cmd(
+        ["ls-files", "-ci", "--exclude-standard"],
+        capture_output=True,
+        check=False,
+        quiet=True,
+    )
+    if ignored_tracked.returncode == 0 and ignored_tracked.stdout.strip():
+        to_unstage.extend(
+            normalize_rel_path(line)
+            for line in ignored_tracked.stdout.splitlines()
+            if line.strip()
+        )
+
+    indexed = run_shadow_cmd(
+        ["ls-files"],
+        capture_output=True,
+        check=False,
+        quiet=True,
+    )
+    if indexed.returncode == 0 and indexed.stdout.strip():
+        indexed_paths = [
+            normalize_rel_path(line)
+            for line in indexed.stdout.splitlines()
+            if line.strip()
+        ]
+        ignored_indexed = gitignored_rel_paths(project_root, indexed_paths)
+        to_unstage.extend(p for p in indexed_paths if p in ignored_indexed)
+
+    unique = sorted(set(to_unstage))
+    if unique:
+        chunk_size = 200
+        for start in range(0, len(unique), chunk_size):
+            run_shadow_cmd(
+                ["reset", "--", *unique[start : start + chunk_size]],
+                quiet=True,
+                check=False,
+            )
+
+
+def normalize_rel_path(rel_path: str) -> str:
+    return rel_path.replace("\\", "/").strip("/")
+
+
 def get_snapshot_metadata(commit_hash: str) -> Dict[str, Any]:
     """Get metadata for a snapshot"""
     res = run_shadow_cmd(

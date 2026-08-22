@@ -13,7 +13,7 @@ import uuid
 
 import yaml
 
-from d4_snap.git_operations import safe_extract_tar
+from d4_snap.git_operations import safe_extract_tar, stage_worktree_for_snapshot
 from d4_snap.path_safety import is_safe_relative_path
 
 # --- Shadow Git Checkpoints Config ---
@@ -176,7 +176,7 @@ def save_snapshot(is_claude=False):
     commit_msg = f"{name}\n\nBranch: {branch}\nTimestamp: {timestamp}"
 
     print(msgs.get("saving", "Saving snapshot."))
-    run_shadow_cmd(["add", "."], quiet=True, check=False)
+    stage_worktree_for_snapshot()
 
     res = run_shadow_cmd(
         ["commit", "-m", commit_msg], check=False, capture_output=True, quiet=True
