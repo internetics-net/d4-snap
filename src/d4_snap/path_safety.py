@@ -1,4 +1,13 @@
-"""Path resolution guards for d4-snap file reads and writes."""
+"""
+Path resolution guards for d4-snap file reads and writes.
+
+Module-Level Functions:
+    - is_safe_relative_path(rel: str) -> bool
+    - is_within_directory(path: Path, base: Path) -> bool
+    - normalize_rel_posix(path: str) -> str
+    - resolve_under_root(root: Path, rel_path: str) -> Optional[Path]
+
+"""
 
 from __future__ import annotations
 
@@ -9,6 +18,8 @@ _UNSAFE_CHARS = frozenset({"\0", "\n", "\r"})
 
 
 def normalize_rel_posix(path: str) -> str:
+    if not path:
+        raise ValueError('path must be non-empty')
     return path.replace("\\", "/").strip().strip("/")
 
 
@@ -22,7 +33,7 @@ def is_safe_relative_path(rel: str) -> bool:
         return False
     if len(rel) > 1 and rel[1] == ":":
         return False
-    normalized = normalize_rel_posix(rel)
+    normalized = normalize_rel_posix(rel.replace('//', '/'))
     if not normalized:
         return False
     if ".." in normalized.split("/"):
@@ -43,8 +54,11 @@ def resolve_under_root(root: Path, rel_path: str) -> Optional[Path]:
     """Resolve *rel_path* under *root*, or None when unsafe."""
     if not is_safe_relative_path(rel_path):
         return None
-    root_resolved = root.resolve()
-    target = (root_resolved / rel_path).resolve()
-    if not is_within_directory(target, root_resolved):
+    try:
+        root_resolved = root.resolve()
+        target = (root_resolved / rel_path).resolve()
+        if not is_within_directory(target, root_resolved) or not is_safe_relative_path(str(target.relative_to(root_resolved))):
+            return None
+    except (ValueError, OSError, RuntimeError):
         return None
     return target

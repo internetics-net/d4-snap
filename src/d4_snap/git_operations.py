@@ -1,5 +1,40 @@
 """
+
 Git operations module - low-level git commands and shadow repository management
+
+Module-Level Functions:
+    - atomic_write_file(file_path: str, content: Any) -> None
+    - cleanup_old_snapshots() -> None
+    - cleanup_very_old_snapshots(days: int) -> None
+    - create_tag(tag_name: str, commit_hash: str) -> None
+    - delete_tag(tag_name: str) -> None
+    - extract_file_from_snapshot(commit_hash: str, file_path: str, work_tree: str) -> bool
+    - extract_snapshot_archive(commit_hash: str, work_tree: str) -> bool
+    - get_commit_files(commit_hash: str) -> List[str]
+    - get_current_branch() -> str
+    - get_repo_root() -> str
+    - get_shadow_current_branch() -> Optional[str]
+    - get_shadow_repo_path() -> Tuple[str, str]
+    - get_snapshot_metadata(commit_hash: str) -> Dict[str, Any]
+    - init_shadow_repo() -> str
+    - normalize_rel_path(rel_path: str) -> str
+    - run_cmd(cmd: List[str], check: bool, capture_output: bool, quiet: bool, binary: bool) -> subprocess.CompletedProcess
+    - run_shadow_cmd(args: List[str], capture_output: bool, check: bool, quiet: bool, binary: bool) -> subprocess.CompletedProcess
+    - safe_extract_tar(tar: tarfile.TarFile, path: str) -> None
+    - set_snapshot_metadata(commit_hash: str, metadata: Dict[str, Any]) -> None
+    - show_diff(commit_hash: str, path: Optional[str]) -> None
+    - stage_worktree_for_snapshot() -> None
+
+GitOperations Class Methods:
+    - __init__(checkpoint_dir: Optional[Path]) -> None
+    - add_remote(repo_name: str, remote_path: str) -> bool
+    - create_shadow_branch(branch_name: str) -> bool
+    - get_current_branch() -> Optional[str]
+    - get_repo_hash() -> Optional[str]
+    - get_repo_name() -> Optional[str]
+    - init_bare_repo(repo_name: str) -> bool
+    - push_to_shadow(branch: str) -> bool
+
 """
 
 import os
@@ -27,7 +62,22 @@ def run_cmd(
     quiet: bool = False,
     binary: bool = False,
 ) -> subprocess.CompletedProcess:
-    """Execute a shell command"""
+    """Execute a command.
+
+    Args:
+        cmd: Command and arguments to execute.
+        check: Whether to raise when the command exits with a nonzero status.
+        capture_output: Whether to capture standard output and standard error.
+        quiet: Whether to suppress command and failure messages.
+        binary: Whether to preserve output as bytes.
+
+    Returns:
+        Completed command result.
+
+    Raises:
+        subprocess.CalledProcessError: If check is True and the command exits
+            with a nonzero status.
+    """
     if not quiet:
         print(f"\n> {' '.join(cmd)}")
 
@@ -84,9 +134,14 @@ def get_repo_root() -> str:
 
 
 def safe_extract_tar(tar: tarfile.TarFile, path: str) -> None:
-    """
-    Safely extract tar archive, preventing path traversal and symlink attacks.
-    Raises RuntimeError if any member would escape the target path.
+    """Extract a tar archive without allowing members to escape the target path.
+
+    Args:
+        tar: Open tar archive to extract.
+        path: Destination directory.
+
+    Raises:
+        RuntimeError: If an archive member or symlink target is outside path.
     """
     base = Path(path).resolve()
 
@@ -110,21 +165,27 @@ def safe_extract_tar(tar: tarfile.TarFile, path: str) -> None:
 
 
 def atomic_write_file(file_path: str, content: Any) -> None:
-    """
-    Atomically write content to a file using a temporary file and os.replace.
-    Handles both text (str) and binary (bytes) content.
+    """Atomically write text or bytes to a file.
+
+    Args:
+        file_path: Destination file path.
+        content: Text or binary content to write.
+
+    Raises:
+        TypeError: If content is neither str nor bytes.
     """
     os.makedirs(os.path.dirname(file_path) or ".", exist_ok=True)
 
     dir_path = os.path.dirname(file_path) or "."
 
+    if not isinstance(content, (str, bytes)):
+        raise TypeError(f"Content must be str or bytes, got {type(content)}")
+
     with tempfile.NamedTemporaryFile(dir=dir_path, delete=False, mode="wb") as tmp:
         if isinstance(content, str):
             tmp.write(content.encode("utf-8"))
-        elif isinstance(content, bytes):
-            tmp.write(content)
         else:
-            raise TypeError(f"Content must be str or bytes, got {type(content)}")
+            tmp.write(content)
         tmp_name = tmp.name
 
     try:
@@ -224,6 +285,7 @@ def stage_worktree_for_snapshot() -> None:
 
 
 def normalize_rel_path(rel_path: str) -> str:
+    """Normalize path separators and remove leading and trailing slashes."""
     return rel_path.replace("\\", "/").strip("/")
 
 
@@ -270,7 +332,15 @@ def get_commit_files(commit_hash: str) -> List[str]:
 
 
 def extract_snapshot_archive(commit_hash: str, work_tree: str) -> bool:
-    """Extract entire snapshot to work tree"""
+    """Extract a snapshot archive into a work tree.
+
+    Args:
+        commit_hash: Snapshot commit to extract.
+        work_tree: Destination work-tree path.
+
+    Returns:
+        True if the archive is retrieved and extracted safely; otherwise, False.
+    """
     result = run_shadow_cmd(
         ["archive", "--format=tar", commit_hash],
         capture_output=True,
@@ -296,7 +366,16 @@ def extract_snapshot_archive(commit_hash: str, work_tree: str) -> bool:
 def extract_file_from_snapshot(
     commit_hash: str, file_path: str, work_tree: str
 ) -> bool:
-    """Extract a specific file from snapshot"""
+    """Extract a snapshot file into a work tree.
+
+    Args:
+        commit_hash: Snapshot commit containing the file.
+        file_path: Relative path of the file in the snapshot.
+        work_tree: Destination work-tree path.
+
+    Returns:
+        True if the file is retrieved and written successfully; otherwise, False.
+    """
     resolved = resolve_under_root(Path(work_tree), file_path)
     if resolved is None:
         return False
@@ -307,6 +386,7 @@ def extract_file_from_snapshot(
         capture_output=True,
         check=False,
         quiet=True,
+        binary=True,
     )
 
     if result.returncode == 0:
@@ -323,7 +403,12 @@ def extract_file_from_snapshot(
 
 
 def show_diff(commit_hash: str, path: Optional[str] = None) -> None:
-    """Show diff between snapshot and current working directory"""
+    """Show the diff between a snapshot and the current working directory.
+
+    Args:
+        commit_hash: Snapshot commit to compare.
+        path: Optional relative path to limit the diff. Unsafe paths are ignored.
+    """
     if path:
         if not is_safe_relative_path(path):
             return
@@ -373,7 +458,14 @@ def cleanup_old_snapshots() -> None:
 
 
 def cleanup_very_old_snapshots(days: int = 90) -> None:
-    """Cleanup snapshots older than specified days (except favorites)"""
+    """Clean up snapshots older than the specified number of days.
+
+    Args:
+        days: Positive retention period in days. Defaults to 90.
+
+    Raises:
+        ValueError: If days is not a positive integer.
+    """
     # Validate days parameter
     if not isinstance(days, int) or days <= 0:
         raise ValueError(f"Invalid cleanup days: {days}. Must be a positive integer.")

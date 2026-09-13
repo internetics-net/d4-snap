@@ -1,4 +1,16 @@
-"""Command-line interface orchestration module"""
+"""
+Command-line interface orchestration module
+
+Module-Level Functions:
+    - cleanup_shadow_repo() -> None
+    - list_snapshots(group_by_branch: Any, show_ai: Any) -> None
+    - main() -> None
+    - manage_snapshots() -> None
+    - restore_snapshot() -> None
+    - save_snapshot(is_claude: Any) -> None
+    - view_diff() -> None
+
+"""
 
 from .menu import get_menu_manager
 from .ui import get_ui
@@ -181,6 +193,8 @@ def cleanup_shadow_repo():
     config = load_config()
     auto_cleanup_config = config.get("auto_cleanup", {})
     manual_cleanup_days = auto_cleanup_config.get("manual_cleanup_days", 30)
+    if not isinstance(manual_cleanup_days, int) or manual_cleanup_days <= 0:
+        manual_cleanup_days = 30
 
     snap_mgr.cleanup_very_old_snapshots(manual_cleanup_days)
     ui.display_message("cleanup", "success")

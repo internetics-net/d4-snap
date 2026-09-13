@@ -1,4 +1,12 @@
-"""Git-aware path filtering for snapshot staging (respects .gitignore)."""
+"""
+Git-aware path filtering for snapshot staging (respects .gitignore).
+
+Module-Level Functions:
+    - gitignored_rel_paths(project_root: Path, rel_paths: Iterable[str]) -> Set[str]
+    - is_always_skipped_rel_path(rel_path: str) -> bool
+    - normalize_rel_path(rel_path: str) -> str
+
+"""
 
 from __future__ import annotations
 
@@ -23,6 +31,14 @@ _ALWAYS_SKIP_PARTS = frozenset(
 
 
 def normalize_rel_path(rel_path: str) -> str:
+    """Normalize a relative path to slash-separated form.
+
+    Args:
+        rel_path: Path string to normalize.
+
+    Returns:
+        The path with backslashes replaced and leading and trailing slashes removed.
+    """
     return rel_path.replace("\\", "/").strip("/")
 
 

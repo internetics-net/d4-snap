@@ -1,3 +1,35 @@
+"""
+Module description.
+
+Module-Level Functions:
+    - get_main_choice() -> str
+    - get_manage_choice() -> str
+    - get_menu_manager() -> MenuManager
+    - get_path_input(section: str) -> str
+    - get_restore_choice() -> str
+    - get_snapshot_choice() -> str
+    - show_main_menu() -> None
+    - show_manage_menu() -> None
+
+MenuManager Class Methods:
+    - __init__(config_path: Optional[Path]) -> None
+    - _load_config() -> Dict[str, Any]
+    - display_and_get_choice(menu_name: str) -> str
+    - display_menu(menu_name: str) -> None
+    - get_confirmation(section: str, prompt_key: str, format_args: Optional[Dict]) -> str
+    - get_menu_config(menu_name: str) -> Dict[str, Any]
+    - get_menu_prompt(menu_name: str, default: str) -> str
+    - get_message(section: str, key: str, default: str) -> str
+    - get_new_name_input(current_name: str) -> str
+    - get_path_input(section: str, prompt_key: str, default: str) -> str
+    - get_restore_option() -> str
+    - get_snapshot_number(section: str, prompt_key: str) -> str
+    - get_user_input(menu_name: str, default_prompt: str) -> str
+    - print_message(section: str, key: str, format_args: Optional[Dict], default: str) -> None
+    - reload_config() -> None
+
+"""
+
 import yaml
 from pathlib import Path
 from typing import Dict, Any, Optional
@@ -13,7 +45,14 @@ class MenuManager:
     def _load_config(self) -> Dict[str, Any]:
         if self.config_path.exists():
             with open(self.config_path, "r", encoding="utf-8") as f:
-                return yaml.safe_load(f) or {}
+                config = yaml.safe_load(f)
+            if config is None:
+                return {}
+            if not isinstance(config, dict):
+                raise ValueError(
+                    f"Menu config must contain a top-level mapping: {self.config_path}"
+                )
+            return config
         return {}
 
     def reload_config(self):

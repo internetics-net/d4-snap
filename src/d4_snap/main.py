@@ -1,6 +1,14 @@
 """
+
 Main entry point for d4-snap
 Integrates all modules: menu, ui, snapshot_manager, git_operations, and cli
+
+Module-Level Functions:
+    - cleanup_old_snapshots() -> None
+    - print_help() -> None
+    - run() -> None
+    - validate_argument(arg: Any) -> None
+
 """
 
 import sys
@@ -58,7 +66,7 @@ def validate_argument(arg):
 
     # Use whitelist approach - only allow safe characters
     # Allow alphanumeric, hyphens, underscores, and common help flags
-    if not re.match(r"^[a-zA-Z0-9\-_/?h]+$", arg):
+    if not re.match(r"^[a-zA-Z0-9_/?h]+$", arg):
         return False
 
     # Length limit to prevent buffer overflow attempts

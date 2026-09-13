@@ -1,4 +1,18 @@
-"""Tests for main.py module"""
+"""
+Tests for main.py module
+
+TestMain Class Methods:
+    - test_print_help(capsys: Any) -> None
+    - test_run_default_mode(mock_save_snapshot: Any, mock_cleanup: Any, capsys: Any) -> None
+    - test_run_exception_handling(mock_save_snapshot: Any, mock_cleanup: Any, capsys: Any) -> None
+    - test_run_help_flag(capsys: Any) -> None
+    - test_run_help_mode(capsys: Any) -> None
+    - test_run_help_slash_question(capsys: Any) -> None
+    - test_run_invalid_argument(capsys: Any) -> None
+    - test_run_keyboard_interrupt(mock_save_snapshot: Any, mock_cleanup: Any, capsys: Any) -> None
+    - test_run_menu_mode(mock_main: Any, mock_cleanup: Any) -> None
+
+"""
 
 import pytest
 from unittest.mock import patch
@@ -98,7 +112,7 @@ class TestMain:
     @patch("sys.argv", ["d4-snap"])
     def test_run_exception_handling(self, mock_save_snapshot, mock_cleanup, capsys):
         """Test general exception handling"""
-        mock_save_snapshot.side_effect = OSError("Test error")
+        mock_save_snapshot.side_effect = Exception("Test error")
 
         with pytest.raises(SystemExit):
             run()

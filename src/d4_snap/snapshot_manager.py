@@ -1,5 +1,27 @@
 """
+
 Snapshot management module - business logic for snapshot operations
+
+Module-Level Functions:
+    - get_snapshot_manager() -> SnapshotManager
+
+SnapshotManager Class Methods:
+    - __init__() -> None
+    - _generate_ai_notes() -> str
+    - _summarize_files(files: List[str]) -> str
+    - cleanup_old_snapshots() -> None
+    - cleanup_very_old_snapshots(days: int) -> None
+    - create_snapshot(is_claude: bool) -> Dict[str, Any]
+    - delete_snapshot(commit_hash: str) -> Dict[str, Any]
+    - delete_snapshots_up_to(snapshots: List[Dict[str, Any]], index: int) -> int
+    - get_snapshot_files(commit_hash: str) -> List[str]
+    - get_snapshots(group_by_branch: bool, show_ai: bool) -> List[Dict[str, Any]]
+    - rename_snapshot(commit_hash: str, new_name: str) -> bool
+    - restore_file_from_snapshot(commit_hash: str, file_path: str) -> bool
+    - restore_full_snapshot(commit_hash: str) -> bool
+    - show_diff(commit_hash: str, path: Optional[str]) -> None
+    - toggle_favorite(commit_hash: str) -> bool
+
 """
 
 import re
@@ -63,7 +85,8 @@ class SnapshotManager:
             commit_hash = hash_result.stdout.strip()
         except subprocess.CalledProcessError as e:
             # Check if there's nothing to commit
-            if "nothing to commit" in str(e):
+            error_output = f"{e.stdout or ''}\n{e.stderr or ''}"
+            if "nothing to commit" in error_output:
                 return {"success": False, "message": "no changes", "hash": ""}
             # Otherwise, there was an actual error
             return {"success": False, "message": "commit failed", "hash": ""}
@@ -281,6 +304,8 @@ class SnapshotManager:
         for snap in snapshots_to_delete:
             hash_to_delete = snap["hash"]
             meta = git_ops.get_snapshot_metadata(hash_to_delete)
+            if meta.get("favorite", False):
+                continue
             meta["deleted"] = True
             git_ops.set_snapshot_metadata(hash_to_delete, meta)
 

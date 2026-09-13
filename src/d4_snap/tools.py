@@ -1,3 +1,25 @@
+"""
+Module description.
+
+Module-Level Functions:
+    - cleanup_shadow_repo() -> None
+    - get_current_branch() -> None
+    - get_repo_root() -> None
+    - get_shadow_repo_path() -> None
+    - get_snapshot_metadata(commit_hash: Any) -> None
+    - init_shadow_repo() -> None
+    - list_snapshots(group_by_branch: Any, show_ai: Any) -> None
+    - load_config() -> None
+    - manage_snapshots() -> None
+    - restore_snapshot() -> None
+    - run_cmd(cmd: Any, check: Any, capture_output: Any, quiet: Any, binary: Any) -> None
+    - run_shadow_cmd(args: Any, capture_output: Any, check: Any, quiet: Any, binary: Any) -> None
+    - save_snapshot(is_claude: Any) -> None
+    - set_snapshot_metadata(commit_hash: Any, metadata: Any) -> None
+    - view_diff() -> None
+
+"""
+
 # src/d4_crc/tools.py
 from datetime import datetime, timezone
 import hashlib
@@ -29,6 +51,11 @@ def load_config():
             with open(CONFIG_FILE, "r", encoding="utf-8") as f:
                 config = yaml.safe_load(f)
                 if config is None:
+                    return {}
+                if not isinstance(config, dict):
+                    print(
+                        f"⚠️  Warning: Config file {CONFIG_FILE} must contain a mapping."
+                    )
                     return {}
                 return config
         else:
@@ -184,6 +211,8 @@ def save_snapshot(is_claude=False):
 
     if "nothing to commit" in res.stdout or "nothing to commit" in res.stderr:
         print(msgs.get("no_changes", "No changes to save."))
+    elif res.returncode != 0:
+        print("❌ Failed to save snapshot.")
     else:
         commit_hash = run_shadow_cmd(
             ["rev-parse", "HEAD"], capture_output=True, quiet=True
@@ -335,7 +364,6 @@ def restore_snapshot():
         if confirm.lower() == "y":
             # Use git archive to extract all files from the snapshot
             _, work_tree = get_shadow_repo_path()
-            os.chdir(work_tree)
 
             # Extract using git archive and tar
             result = run_shadow_cmd(

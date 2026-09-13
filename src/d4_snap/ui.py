@@ -1,5 +1,27 @@
 """
+
 User interaction module - handles all user input/output operations
+
+Module-Level Functions:
+    - get_ui() -> UserInterface
+
+UserInterface Class Methods:
+    - __init__() -> None
+    - display_available_files(files: List[str], work_tree: str) -> None
+    - display_error(message: str) -> None
+    - display_manage_options() -> None
+    - display_message(section: str, key: str, format_args: Optional[Dict], default: str) -> None
+    - display_snapshots(snapshots: List[Dict[str, Any]], grouped: bool) -> None
+    - display_success(message: str) -> None
+    - display_title(section: str, key: str, default: str) -> None
+    - display_warning(message: str) -> None
+    - get_confirmation(section: str, prompt_key: str, format_args: Optional[Dict]) -> bool
+    - get_file_path(section: str, prompt_key: str) -> str
+    - get_manage_option() -> str
+    - get_new_snapshot_name(current_name: str) -> str
+    - get_restore_option() -> str
+    - get_snapshot_selection(snapshots: List[Dict[str, Any]], section: str) -> Optional[Dict[str, Any]]
+
 """
 
 from typing import List, Dict, Any, Optional

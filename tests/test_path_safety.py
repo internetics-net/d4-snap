@@ -1,4 +1,27 @@
-"""Tests for path_safety.py and tar/file restore guards."""
+"""
+Tests for path_safety.py and tar/file restore guards.
+
+TestPathSafety Class Methods:
+    - test_is_safe_relative_path_accepts_normal() -> None
+    - test_is_safe_relative_path_rejects_absolute() -> None
+    - test_is_safe_relative_path_rejects_traversal() -> None
+    - test_is_within_directory(temp_dir: Any) -> None
+    - test_resolve_under_root(temp_dir: Any) -> None
+    - test_resolve_under_root_rejects_escape(temp_dir: Any) -> None
+
+TestSafeExtractTar Class Methods:
+    - test_allows_safe_member(temp_dir: Any) -> None
+    - test_rejects_path_traversal_member(temp_dir: Any) -> None
+
+TestExtractFileFromSnapshot Class Methods:
+    - test_rejects_path_traversal(temp_dir: Any) -> None
+    - test_writes_under_work_tree(mock_run: Any, temp_dir: Any) -> None
+
+TestShowDiff Class Methods:
+    - test_passes_safe_path(mock_run: Any) -> None
+    - test_rejects_unsafe_path(mock_run: Any) -> None
+
+"""
 
 import io
 import tarfile
@@ -58,7 +81,7 @@ class TestSafeExtractTar:
         extract_dir.mkdir()
         buf = io.BytesIO()
         with tarfile.open(fileobj=buf, mode="w") as tar:
-            info = tarfile.TarInfo(name="../escape.txt")
+            info = tarfile.TarInfo(name="safe.txt")
             info.size = 4
             tar.addfile(info, io.BytesIO(b"evil"))
 
