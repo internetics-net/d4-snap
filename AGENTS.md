@@ -1,45 +1,59 @@
-<!-- gitnexus:start -->
-# GitNexus — Code Intelligence
+# Agent Policy (d4-ai-rag-intel)
 
-This project is indexed by GitNexus as **d4-snap** (1838 symbols, 4212 relationships, 36 execution flows). Use the GitNexus MCP tools to understand code, assess impact, and navigate safely.
+This file is the canonical repository policy for coding agents. Client-specific
+files should point here instead of duplicating these rules.
 
-> Index stale? Run `node .gitnexus/run.cjs analyze` from the project root — it auto-selects an available runner. No `.gitnexus/run.cjs` yet? `npx gitnexus analyze` (npm 11 crash → `npm i -g gitnexus`; #1939).
+## Scope and precedence
 
-## Always Do
+- Apply these rules to work in this repository.
+- Follow higher-priority system and user instructions when they conflict with this
+  file.
+- Do not fabricate tool results, APIs, symbols, paths, versions, test results, or
+  runtime behavior.
 
-- **MUST run impact analysis before editing any symbol.** Before modifying a function, class, or method, run `impact({target: "symbolName", direction: "upstream"})` and report the blast radius (direct callers, affected processes, risk level) to the user. For unified PDG impact, add `mode: "pdg"` with optional `line: <N>` — it returns statement-level `affectedStatements` over CDG + REACHING_DEF and inter-procedural symbols in `interproceduralByDepth`/`byDepth`; no-layer/degraded PDG results are UNKNOWN-risk notes (`--pdg` layer).
-- **MUST run `detect_changes()` before committing** to verify your changes only affect expected symbols and execution flows. For regression review, compare against the default branch: `detect_changes({scope: "compare", base_ref: "main"})`.
-- **MUST warn the user** if impact analysis returns HIGH or CRITICAL risk before proceeding with edits.
-- When exploring unfamiliar code, use `query({search_query: "concept"})` to find execution flows instead of grepping. It returns process-grouped results ranked by relevance.
-- When you need full context on a specific symbol — callers, callees, which execution flows it participates in — use `context({name: "symbolName"})`.
-- For security review, `explain({target: "fileOrSymbol"})` lists taint findings (source→sink flows; needs `analyze --pdg`).
-- For control/data dependence, `pdg_query({mode: "controls", target: "fileOrSymbol"})` answers "under what condition does X run?" (CDG, incl. guard clauses) and `pdg_query({mode: "flows", target, variable})` traces "where does variable Y flow?" (REACHING_DEF). `--pdg` layer.
+## Required workflow
 
-## Never Do
+- Before editing a function, class, or method, run d4-ai-rag-intel `impact` with
+  `direction: "upstream"`. Report direct callers, affected processes, and risk.
+- Warn the user before proceeding when impact reports HIGH or CRITICAL risk.
+- Before committing, run `detect_changes` and confirm changed symbols and execution
+  flows match the intended scope. This repository uses `main` as its default
+  comparison branch (override if the repo default differs).
+- Prefer d4-ai-rag-intel `query` and `context` for unfamiliar indexed code. Use ordinary
+  file inspection when MCP is unavailable or cannot answer the query.
+- Pass `repo` when more than one indexed repository is registered.
 
-- NEVER edit a function, class, or method without first running `impact` on it.
-- NEVER ignore HIGH or CRITICAL risk warnings from impact analysis.
-- NEVER rename symbols with find-and-replace — use `rename` which understands the call graph.
-- NEVER commit changes without running `detect_changes()` to check affected scope.
+## MCP and index lifecycle
 
-## Resources
+- In clients that defer tools, use `tool_search` to load the relevant
+  `mcp_d4-ai-rag_*` tool before concluding that MCP is unavailable. Make at least
+  one direct MCP call as the availability check.
+- A tool omitted from a subagent invocation is a tool-exposure limitation, not
+  evidence of an MCP server outage. Run required MCP calls in the parent session
+  when the parent exposes them.
+- Check index freshness before relying on graph results. Run `d4-ai-rag-intel analyze` when
+  the index is stale, then reload the d4-ai-rag MCP server.
+- After `d4-ai-rag-intel analyze` or `d4-ai-rag-intel clean`, reload MCP before using its tools again.
+- If a direct MCP call fails, report the concrete failure and do not present a
+  guessed result as evidence. An equivalent CLI or source check may be used when
+  available.
+- Do not treat a missing impact result as proof that a change is safe.
+- Do **not** use GitNexus (or any other parallel code-intel MCP) alongside d4-ai-rag.
 
-| Resource | Use for |
-|----------|---------|
-| `gitnexus://repo/d4-snap/context` | Codebase overview, check index freshness |
-| `gitnexus://repo/d4-snap/clusters` | All functional areas |
-| `gitnexus://repo/d4-snap/processes` | All execution flows |
-| `gitnexus://repo/d4-snap/process/{name}` | Step-by-step execution trace |
+## SQL and security
 
-## CLI
+- Read `d4rag://repo/{name}/schema` before using the MCP `sql` tool.
+- Submit one read-only `SELECT` or `WITH ... SELECT` statement only. Do not use
+  `INSERT`, `UPDATE`, `DELETE`, `PRAGMA`, or `ATTACH` through MCP SQL.
+- Use `explain` and `pdg_query` only after indexes were built with `--pdg`; absence
+  of a finding is not proof of safety.
 
-| Task | Read this skill file |
-|------|---------------------|
-| Understand architecture / "How does X work?" | `.claude/skills/gitnexus/gitnexus-exploring/SKILL.md` |
-| Blast radius / "What breaks if I change X?" | `.claude/skills/gitnexus/gitnexus-impact-analysis/SKILL.md` |
-| Trace bugs / "Why is X failing?" | `.claude/skills/gitnexus/gitnexus-debugging/SKILL.md` |
-| Rename / extract / split / refactor | `.claude/skills/gitnexus/gitnexus-refactoring/SKILL.md` |
-| Tools, resources, schema reference | `.claude/skills/gitnexus/gitnexus-guide/SKILL.md` |
-| Index, status, clean, wiki CLI commands | `.claude/skills/gitnexus/gitnexus-cli/SKILL.md` |
+## Repository references
 
-<!-- gitnexus:end -->
+- MCP resources: `d4rag://repos` and `d4rag://repo/{name}/context`, `clusters`,
+  `processes`, and `schema`.
+- CLI reference: `.agents/skills/d4-rag-cli/SKILL.md` (also under
+  `.claude/skills/d4-rag/`).
+- Task-specific workflows: `.agents/skills/d4-rag-{exploring,debugging,guide,impact,pdg}/SKILL.md`.
+- The installed MCP runtime is `d4-ai-rag[mcp]`, launched with
+  `python -m d4_ai_rag.intel.cli mcp` or `d4-ai-rag-intel mcp`.
