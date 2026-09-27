@@ -70,9 +70,7 @@ class TestCLI:
         result = list_snapshots()
 
         assert result == mock_snapshots
-        mock_ui_instance.display_snapshots.assert_called_once_with(
-            mock_snapshots, False
-        )
+        mock_ui_instance.display_snapshots.assert_called_once_with(mock_snapshots, False)
 
     @patch("d4_snap.cli.get_ui")
     @patch("d4_snap.cli.get_snapshot_manager")
@@ -102,9 +100,7 @@ class TestCLI:
         with patch("d4_snap.cli.save_snapshot"):
             main()
 
-        mock_menu_mgr_instance.print_message.assert_called_once_with(
-            "messages", "goodbye"
-        )
+        mock_menu_mgr_instance.print_message.assert_called_once_with("messages", "goodbye")
 
     @patch("d4_snap.cli.get_menu_manager")
     def test_main_loop_save_option(self, mock_menu_mgr):
@@ -132,6 +128,4 @@ class TestCLI:
         with patch("d4_snap.cli.save_snapshot"):
             main()
 
-        mock_menu_mgr_instance.print_message.assert_any_call(
-            "messages", "invalid_choice"
-        )
+        mock_menu_mgr_instance.print_message.assert_any_call("messages", "invalid_choice")

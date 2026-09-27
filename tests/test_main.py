@@ -30,10 +30,7 @@ class TestMain:
 
         assert "d4-snap - Git Snapshot & Rollback Manager" in captured.out
         assert "USAGE:" in captured.out
-        assert (
-            "d4-snap                    Create a snapshot of current project and exit"
-            in captured.out
-        )
+        assert "d4-snap                    Create a snapshot of current project and exit" in captured.out
         assert "d4-snap menu               Show interactive menu" in captured.out
         assert "d4-snap help               Show this help message" in captured.out
         assert "d4-snap --help             Show this help message" in captured.out

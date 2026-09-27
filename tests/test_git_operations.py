@@ -22,9 +22,7 @@ class TestGitOperations:
         with patch("d4_snap.git_operations.CHECKPOINT_DIR", mock_checkpoint_dir):
             with patch("d4_snap.git_operations.run_cmd") as mock_run_cmd:
                 # Mock the git command to return our test repo path
-                mock_run_cmd.return_value = Mock(
-                    returncode=0, stdout=str(mock_git_repo)
-                )
+                mock_run_cmd.return_value = Mock(returncode=0, stdout=str(mock_git_repo))
 
                 repo_name = git_ops.get_repo_name()
 
@@ -72,9 +70,7 @@ class TestGitOperations:
             result = git_ops.init_bare_repo("test_repo-hash")
 
             assert result is True
-            mock_run.assert_called_with(
-                ["git", "init", "--bare", str(bare_repo_path)], quiet=True
-            )
+            mock_run.assert_called_with(["git", "init", "--bare", str(bare_repo_path)], quiet=True)
 
     def test_init_bare_repo_failure(self, mock_checkpoint_dir):
         """Test initializing bare repository with failure"""
@@ -98,9 +94,7 @@ class TestGitOperations:
             result = git_ops.add_remote("test_repo-hash", str(bare_repo_path))
 
             assert result is True
-            mock_run.assert_called_with(
-                ["git", "remote", "add", "shadow", str(bare_repo_path)], quiet=True
-            )
+            mock_run.assert_called_with(["git", "remote", "add", "shadow", str(bare_repo_path)], quiet=True)
 
     def test_add_remote_failure(self, mock_checkpoint_dir):
         """Test adding remote with failure"""
@@ -146,9 +140,7 @@ class TestGitOperations:
             result = git_ops.create_shadow_branch("shadow-branch")
 
             assert result is True
-            mock_run.assert_called_with(
-                ["git", "checkout", "-b", "shadow-branch"], quiet=True
-            )
+            mock_run.assert_called_with(["git", "checkout", "-b", "shadow-branch"], quiet=True)
 
     def test_create_shadow_branch_failure(self, mock_checkpoint_dir):
         """Test creating shadow branch with failure"""
@@ -229,9 +221,7 @@ class TestRunCmd:
             result = run_cmd(["echo", "test"], capture_output=True)
 
             assert result.stdout == "captured"
-            mock_run.assert_called_with(
-                ["echo", "test"], text=True, capture_output=True
-            )
+            mock_run.assert_called_with(["echo", "test"], text=True, capture_output=True)
 
     def test_run_cmd_quiet(self):
         """Test command with quiet=True"""
@@ -250,9 +240,7 @@ class TestRunCmd:
             result = run_cmd(["echo", "test"], binary=True)
 
             assert result.stdout == b"binary"
-            mock_run.assert_called_with(
-                ["echo", "test"], text=False, capture_output=False
-            )
+            mock_run.assert_called_with(["echo", "test"], text=False, capture_output=False)
 
 
 class TestStageWorktreeForSnapshot:
@@ -265,9 +253,7 @@ class TestStageWorktreeForSnapshot:
             mock_shadow.side_effect = [
                 Mock(returncode=0),  # add -A
                 Mock(returncode=0, stdout=".venv/lib/site.py\n"),  # ls-files -ci
-                Mock(
-                    returncode=0, stdout="src/main.py\n.venv/lib/site.py\n"
-                ),  # ls-files
+                Mock(returncode=0, stdout="src/main.py\n.venv/lib/site.py\n"),  # ls-files
                 Mock(returncode=0),  # reset chunk
             ]
             with patch("d4_snap.git_operations.get_shadow_repo_path") as mock_paths:

@@ -22,9 +22,7 @@ class TestMenuManager:
         with patch("d4_snap.menu.Path") as mock_path:
             mock_path.return_value.parent / "config" / "d4_snap.yaml"
 
-            with patch(
-                "builtins.open", mock_open(read_data="main_menu:\n  title: Test")
-            ):
+            with patch("builtins.open", mock_open(read_data="main_menu:\n  title: Test")):
                 menu_mgr = MenuManager()
                 assert menu_mgr.config is not None
 
@@ -50,9 +48,7 @@ class TestMenuManager:
         original_config = menu_mgr.config.copy()
 
         # Modify the file
-        new_content = (
-            "main_menu:\n  title: Updated Menu\n  options:\n    - '1. New Option'"
-        )
+        new_content = "main_menu:\n  title: Updated Menu\n  options:\n    - '1. New Option'"
         mock_config_file.write_text(new_content)
 
         menu_mgr.reload_config()
@@ -90,17 +86,13 @@ class TestMenuManager:
 
     def test_get_message(self, mock_menu_manager):
         """Test getting a message"""
-        message = mock_menu_manager.get_message(
-            "save_snapshot", "success", {"hash": "abc123"}
-        )
+        message = mock_menu_manager.get_message("save_snapshot", "success", {"hash": "abc123"})
         # The actual implementation doesn't format the message, just returns the template
         assert "Success! {hash}" in message
 
     def test_get_message_with_default(self, mock_menu_manager):
         """Test getting a message with default fallback"""
-        message = mock_menu_manager.get_message(
-            "nonexistent", "nonexistent", "Default message"
-        )
+        message = mock_menu_manager.get_message("nonexistent", "nonexistent", "Default message")
         assert message == "Default message"
 
     def test_print_message(self, mock_menu_manager, capsys):

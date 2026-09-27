@@ -49,9 +49,7 @@ class MenuManager:
             if config is None:
                 return {}
             if not isinstance(config, dict):
-                raise ValueError(
-                    f"Menu config must contain a top-level mapping: {self.config_path}"
-                )
+                raise ValueError(f"Menu config must contain a top-level mapping: {self.config_path}")
             return config
         return {}
 
@@ -92,9 +90,7 @@ class MenuManager:
         self.display_menu(menu_name)
         return self.get_user_input(menu_name)
 
-    def get_snapshot_number(
-        self, section: str = "manage_snapshots", prompt_key: str = "prompt_number"
-    ) -> str:
+    def get_snapshot_number(self, section: str = "manage_snapshots", prompt_key: str = "prompt_number") -> str:
         prompt = self.get_message(section, prompt_key, "\nEnter snapshot number: ")
         return input(prompt).strip()
 
@@ -115,9 +111,7 @@ class MenuManager:
         prompt = self.get_message(section, prompt_key, default)
         return input(prompt).strip()
 
-    def get_confirmation(
-        self, section: str, prompt_key: str, format_args: Optional[Dict] = None
-    ) -> str:
+    def get_confirmation(self, section: str, prompt_key: str, format_args: Optional[Dict] = None) -> str:
         prompt = self.get_message(section, prompt_key, "Continue? (y/n): ")
         if format_args:
             prompt = prompt.format(**format_args)

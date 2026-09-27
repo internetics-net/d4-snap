@@ -20,9 +20,7 @@ class TestUserInterface:
     def test_display_message(self, mock_ui):
         """Test displaying message"""
         mock_ui.display_message("save_snapshot", "success", {"hash": "abc123"})
-        mock_ui.display_message.assert_called_once_with(
-            "save_snapshot", "success", {"hash": "abc123"}
-        )
+        mock_ui.display_message.assert_called_once_with("save_snapshot", "success", {"hash": "abc123"})
 
     def test_get_snapshot_selection_valid(self, mock_ui):
         """Test getting valid snapshot selection"""

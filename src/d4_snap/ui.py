@@ -66,15 +66,11 @@ class UserInterface:
         """Get restore option from user (1=all, 2=specific)"""
         return self.menu_mgr.get_restore_option()
 
-    def get_file_path(
-        self, section: str = "restore_snapshot", prompt_key: str = "prompt_path"
-    ) -> str:
+    def get_file_path(self, section: str = "restore_snapshot", prompt_key: str = "prompt_path") -> str:
         """Get file path input from user"""
         return self.menu_mgr.get_path_input(section, prompt_key)
 
-    def get_confirmation(
-        self, section: str, prompt_key: str, format_args: Optional[Dict] = None
-    ) -> bool:
+    def get_confirmation(self, section: str, prompt_key: str, format_args: Optional[Dict] = None) -> bool:
         """Get yes/no confirmation from user"""
         response = self.menu_mgr.get_confirmation(section, prompt_key, format_args)
         return response.lower() == "y"
@@ -83,9 +79,7 @@ class UserInterface:
         """Get new snapshot name from user"""
         return self.menu_mgr.get_new_name_input(current_name)
 
-    def display_snapshots(
-        self, snapshots: List[Dict[str, Any]], grouped: bool = False
-    ) -> None:
+    def display_snapshots(self, snapshots: List[Dict[str, Any]], grouped: bool = False) -> None:
         """Display list of snapshots"""
         msgs = self.menu_mgr.get_menu_config("list_snapshots")
 
@@ -103,19 +97,13 @@ class UserInterface:
 
             idx = 1
             for branch, snaps in sorted(by_branch.items()):
-                print(
-                    msgs.get("branch_prefix", "\n📁 Branch: {branch}").format(
-                        branch=branch
-                    )
-                )
+                print(msgs.get("branch_prefix", "\n📁 Branch: {branch}").format(branch=branch))
                 print(msgs.get("separator_grouped", "-" * 50))
                 for snap in snaps:
                     fav_icon = "⭐" if snap["is_favorite"] else ""
                     notes = snap.get("notes", "")
                     notes_display = f" | {notes}" if notes else ""
-                    print(
-                        f"{idx:<4} {fav_icon:<4} {snap['hash']:<8} {snap['subject']}{notes_display}"
-                    )
+                    print(f"{idx:<4} {fav_icon:<4} {snap['hash']:<8} {snap['subject']}{notes_display}")
                     idx += 1
         else:
             # Normal display with Notes column
@@ -133,7 +121,7 @@ class UserInterface:
                 # Truncate notes if too long
                 notes_display = notes[:27] + "..." if len(notes) > 30 else notes
                 print(
-                    f"{i+1:<4} {fav_icon:<4} {snap['hash']:<8} {snap['branch']:<20} {snap['subject']:<25} {notes_display:<30}"
+                    f"{i + 1:<4} {fav_icon:<4} {snap['hash']:<8} {snap['branch']:<20} {snap['subject']:<25} {notes_display:<30}"
                 )
 
     def display_manage_options(self):
@@ -158,19 +146,11 @@ class UserInterface:
     def display_available_files(self, files: List[str], work_tree: str):
         """Display available files in a snapshot"""
         restore_cfg = self.menu_mgr.get_menu_config("restore_snapshot")
-        print(
-            restore_cfg.get(
-                "available_files_title", "\nAvailable files in this snapshot:"
-            )
-        )
+        print(restore_cfg.get("available_files_title", "\nAvailable files in this snapshot:"))
         for f in files[:15]:
             print(f"  - {f}")
         if len(files) > 15:
-            print(
-                restore_cfg.get(
-                    "available_files_more", "  ... and {count} more files"
-                ).format(count=len(files) - 15)
-            )
+            print(restore_cfg.get("available_files_more", "  ... and {count} more files").format(count=len(files) - 15))
         print(
             restore_cfg.get(
                 "available_files_hint",

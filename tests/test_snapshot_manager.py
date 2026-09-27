@@ -22,12 +22,8 @@ class TestSnapshotManager:
                 "d4_snap.snapshot_manager.git_ops.get_current_branch",
                 return_value="main",
             ):
-                with patch(
-                    "d4_snap.snapshot_manager.git_ops.stage_worktree_for_snapshot"
-                ) as mock_stage:
-                    with patch(
-                        "d4_snap.snapshot_manager.git_ops.run_shadow_cmd"
-                    ) as mock_run:
+                with patch("d4_snap.snapshot_manager.git_ops.stage_worktree_for_snapshot") as mock_stage:
+                    with patch("d4_snap.snapshot_manager.git_ops.run_shadow_cmd") as mock_run:
                         mock_commit_result = Mock()
                         mock_commit_result.stdout = "commit hash"
                         mock_commit_result.stderr = ""
@@ -65,13 +61,9 @@ class TestSnapshotManager:
                 "d4_snap.snapshot_manager.git_ops.get_current_branch",
                 return_value="main",
             ):
-                with patch(
-                    "d4_snap.snapshot_manager.git_ops.run_shadow_cmd"
-                ) as mock_run:
+                with patch("d4_snap.snapshot_manager.git_ops.run_shadow_cmd") as mock_run:
                     # Mock no changes - need to check for "nothing to commit" in stdout or stderr
-                    mock_run.return_value = Mock(
-                        returncode=0, stdout="nothing to commit", stderr=""
-                    )
+                    mock_run.return_value = Mock(returncode=0, stdout="nothing to commit", stderr="")
 
                     snap_mgr = SnapshotManager()
                     result = snap_mgr.create_snapshot()

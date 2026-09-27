@@ -70,9 +70,7 @@ def restore_snapshot():
         # Restore everything
         if ui.get_confirmation("restore_snapshot", "warning", {"hash": commit_hash}):
             if snap_mgr.restore_full_snapshot(commit_hash):
-                ui.display_message(
-                    "restore_snapshot", "success_all", {"hash": commit_hash}
-                )
+                ui.display_message("restore_snapshot", "success_all", {"hash": commit_hash})
 
                 # Delete restored snapshot and newer ones
                 selected_index = snapshots.index(snap)
@@ -92,9 +90,7 @@ def restore_snapshot():
                     {"path": path, "hash": commit_hash},
                 )
             else:
-                ui.display_error(
-                    f"Could not restore '{path}' from snapshot {commit_hash}"
-                )
+                ui.display_error(f"Could not restore '{path}' from snapshot {commit_hash}")
                 files = snap_mgr.get_snapshot_files(commit_hash)
                 if files:
                     from . import git_operations
@@ -163,17 +159,13 @@ def manage_snapshots():
                 # Rename snapshot
                 new_name = ui.get_new_snapshot_name(snap["subject"])
                 if new_name and snap_mgr.rename_snapshot(commit_hash, new_name):
-                    ui.display_message(
-                        "manage_snapshots", "rename_success", {"name": new_name}
-                    )
+                    ui.display_message("manage_snapshots", "rename_success", {"name": new_name})
 
             elif opt == "3":
                 # Delete snapshot
                 result = snap_mgr.delete_snapshot(commit_hash)
                 if result["success"]:
-                    ui.display_message(
-                        "manage_snapshots", "delete_success", {"hash": commit_hash}
-                    )
+                    ui.display_message("manage_snapshots", "delete_success", {"hash": commit_hash})
                 else:
                     if result["message"] == "is_favorite":
                         ui.display_message("manage_snapshots", "delete_warning")

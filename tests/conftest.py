@@ -34,9 +34,7 @@ def mock_git_repo(temp_dir):
     import subprocess
 
     subprocess.run(["git", "init"], cwd=repo_dir, capture_output=True)
-    subprocess.run(
-        ["git", "config", "user.name", "Test User"], cwd=repo_dir, capture_output=True
-    )
+    subprocess.run(["git", "config", "user.name", "Test User"], cwd=repo_dir, capture_output=True)
     subprocess.run(
         ["git", "config", "user.email", "test@example.com"],
         cwd=repo_dir,
@@ -47,9 +45,7 @@ def mock_git_repo(temp_dir):
     test_file = repo_dir / "test.txt"
     test_file.write_text("Initial content")
     subprocess.run(["git", "add", "test.txt"], cwd=repo_dir, capture_output=True)
-    subprocess.run(
-        ["git", "commit", "-m", "Initial commit"], cwd=repo_dir, capture_output=True
-    )
+    subprocess.run(["git", "commit", "-m", "Initial commit"], cwd=repo_dir, capture_output=True)
 
     return repo_dir
 

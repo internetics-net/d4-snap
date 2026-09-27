@@ -95,17 +95,11 @@ def run_cmd(
                         if stderr:
                             print(stderr, file=sys.stderr)
             # Raise CalledProcessError as expected by the test
-            raise subprocess.CalledProcessError(
-                result.returncode, cmd, output=result.stdout, stderr=result.stderr
-            )
+            raise subprocess.CalledProcessError(result.returncode, cmd, output=result.stdout, stderr=result.stderr)
         return result
     except Exception:
         # Ensure proper cleanup if result was created
-        if (
-            result is not None
-            and hasattr(result, "stdout")
-            and isinstance(result.stdout, bytes)
-        ):
+        if result is not None and hasattr(result, "stdout") and isinstance(result.stdout, bytes):
             # Clean up any binary data if needed
             pass
         raise
@@ -157,9 +151,7 @@ def safe_extract_tar(tar: tarfile.TarFile, path: str) -> None:
             else:
                 target_path = (member_path.parent / member.linkname).resolve()
             if not is_within_directory(target_path, base):
-                raise RuntimeError(
-                    f"Symlink escape detected in tar: {member.name} -> {member.linkname}"
-                )
+                raise RuntimeError(f"Symlink escape detected in tar: {member.name} -> {member.linkname}")
 
     tar.extractall(path=path)
 
@@ -225,9 +217,7 @@ def run_shadow_cmd(
     """Execute a git command in the shadow repository"""
     shadow_path, work_tree = get_shadow_repo_path()
     cmd = ["git", f"--git-dir={shadow_path}", f"--work-tree={work_tree}"] + args
-    return run_cmd(
-        cmd, capture_output=capture_output, check=check, quiet=quiet, binary=binary
-    )
+    return run_cmd(cmd, capture_output=capture_output, check=check, quiet=quiet, binary=binary)
 
 
 def stage_worktree_for_snapshot() -> None:
@@ -252,11 +242,7 @@ def stage_worktree_for_snapshot() -> None:
         quiet=True,
     )
     if ignored_tracked.returncode == 0 and ignored_tracked.stdout.strip():
-        to_unstage.extend(
-            normalize_rel_path(line)
-            for line in ignored_tracked.stdout.splitlines()
-            if line.strip()
-        )
+        to_unstage.extend(normalize_rel_path(line) for line in ignored_tracked.stdout.splitlines() if line.strip())
 
     indexed = run_shadow_cmd(
         ["ls-files"],
@@ -265,11 +251,7 @@ def stage_worktree_for_snapshot() -> None:
         quiet=True,
     )
     if indexed.returncode == 0 and indexed.stdout.strip():
-        indexed_paths = [
-            normalize_rel_path(line)
-            for line in indexed.stdout.splitlines()
-            if line.strip()
-        ]
+        indexed_paths = [normalize_rel_path(line) for line in indexed.stdout.splitlines() if line.strip()]
         ignored_indexed = gitignored_rel_paths(project_root, indexed_paths)
         to_unstage.extend(p for p in indexed_paths if p in ignored_indexed)
 
@@ -291,9 +273,7 @@ def normalize_rel_path(rel_path: str) -> str:
 
 def get_snapshot_metadata(commit_hash: str) -> Dict[str, Any]:
     """Get metadata for a snapshot"""
-    res = run_shadow_cmd(
-        ["notes", "show", commit_hash], check=False, capture_output=True, quiet=True
-    )
+    res = run_shadow_cmd(["notes", "show", commit_hash], check=False, capture_output=True, quiet=True)
     if res.returncode == 0 and res.stdout.strip():
         try:
             return json.loads(res.stdout.strip())
@@ -363,9 +343,7 @@ def extract_snapshot_archive(commit_hash: str, work_tree: str) -> bool:
     return False
 
 
-def extract_file_from_snapshot(
-    commit_hash: str, file_path: str, work_tree: str
-) -> bool:
+def extract_file_from_snapshot(commit_hash: str, file_path: str, work_tree: str) -> bool:
     """Extract a snapshot file into a work tree.
 
     Args:
@@ -480,9 +458,7 @@ def cleanup_very_old_snapshots(days: int = 90) -> None:
 
     ref_name = f"refs/heads/{current_branch}"
     try:
-        run_shadow_cmd(
-            ["reflog", "expire", f"--expire={days}.days", ref_name], quiet=True
-        )
+        run_shadow_cmd(["reflog", "expire", f"--expire={days}.days", ref_name], quiet=True)
     except subprocess.CalledProcessError:
         # Reflog might not exist, which is fine for new repositories
         pass
@@ -500,9 +476,7 @@ class GitOperations:
     def __init__(self, checkpoint_dir: Optional[Path] = None):
         """Initialize GitOperations with optional checkpoint directory."""
         # Use the provided checkpoint_dir or fall back to the default
-        self.checkpoint_dir = (
-            checkpoint_dir if checkpoint_dir is not None else CHECKPOINT_DIR
-        )
+        self.checkpoint_dir = checkpoint_dir if checkpoint_dir is not None else CHECKPOINT_DIR
 
     def get_repo_name(self) -> Optional[str]:
         """Get the repository name from current directory."""
@@ -547,9 +521,7 @@ class GitOperations:
     def add_remote(self, repo_name: str, remote_path: str) -> bool:
         """Add a remote repository."""
         try:
-            result = run_cmd(
-                ["git", "remote", "add", "shadow", remote_path], quiet=True
-            )
+            result = run_cmd(["git", "remote", "add", "shadow", remote_path], quiet=True)
             return result.returncode == 0
         except (OSError, subprocess.SubprocessError):
             return False

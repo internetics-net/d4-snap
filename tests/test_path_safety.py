@@ -111,10 +111,7 @@ class TestExtractFileFromSnapshot:
     def test_rejects_path_traversal(self, temp_dir):
         work_tree = temp_dir / "repo"
         work_tree.mkdir()
-        assert (
-            extract_file_from_snapshot("abc123", "../../../etc/passwd", str(work_tree))
-            is False
-        )
+        assert extract_file_from_snapshot("abc123", "../../../etc/passwd", str(work_tree)) is False
 
     @patch("d4_snap.git_operations.run_shadow_cmd")
     def test_writes_under_work_tree(self, mock_run, temp_dir):

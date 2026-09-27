@@ -53,9 +53,7 @@ def load_config():
                 if config is None:
                     return {}
                 if not isinstance(config, dict):
-                    print(
-                        f"⚠️  Warning: Config file {CONFIG_FILE} must contain a mapping."
-                    )
+                    print(f"⚠️  Warning: Config file {CONFIG_FILE} must contain a mapping.")
                     return {}
                 return config
         else:
@@ -87,9 +85,7 @@ def run_cmd(cmd, check=True, capture_output=False, quiet=False, binary=False):
                     if stderr:
                         print(stderr, file=sys.stderr)
         # Raise CalledProcessError as expected by the test
-        raise subprocess.CalledProcessError(
-            result.returncode, cmd, output=result.stdout, stderr=result.stderr
-        )
+        raise subprocess.CalledProcessError(result.returncode, cmd, output=result.stdout, stderr=result.stderr)
     return result
 
 
@@ -165,15 +161,11 @@ def init_shadow_repo():
 def run_shadow_cmd(args, capture_output=False, check=True, quiet=False, binary=False):
     shadow_path, work_tree = get_shadow_repo_path()
     cmd = ["git", f"--git-dir={shadow_path}", f"--work-tree={work_tree}"] + args
-    return run_cmd(
-        cmd, capture_output=capture_output, check=check, quiet=quiet, binary=binary
-    )
+    return run_cmd(cmd, capture_output=capture_output, check=check, quiet=quiet, binary=binary)
 
 
 def get_snapshot_metadata(commit_hash):
-    res = run_shadow_cmd(
-        ["notes", "show", commit_hash], check=False, capture_output=True, quiet=True
-    )
+    res = run_shadow_cmd(["notes", "show", commit_hash], check=False, capture_output=True, quiet=True)
     if res.returncode == 0 and res.stdout.strip():
         try:
             return json.loads(res.stdout.strip())
@@ -205,27 +197,19 @@ def save_snapshot(is_claude=False):
     print(msgs.get("saving", "Saving snapshot."))
     stage_worktree_for_snapshot()
 
-    res = run_shadow_cmd(
-        ["commit", "-m", commit_msg], check=False, capture_output=True, quiet=True
-    )
+    res = run_shadow_cmd(["commit", "-m", commit_msg], check=False, capture_output=True, quiet=True)
 
     if "nothing to commit" in res.stdout or "nothing to commit" in res.stderr:
         print(msgs.get("no_changes", "No changes to save."))
     elif res.returncode != 0:
         print("❌ Failed to save snapshot.")
     else:
-        commit_hash = run_shadow_cmd(
-            ["rev-parse", "HEAD"], capture_output=True, quiet=True
-        ).stdout.strip()
+        commit_hash = run_shadow_cmd(["rev-parse", "HEAD"], capture_output=True, quiet=True).stdout.strip()
         set_snapshot_metadata(
             commit_hash,
             {"favorite": False, "notes": "", "renamed": None, "deleted": False},
         )
-        print(
-            msgs.get(
-                "success", "✅ Snapshot saved successfully! (Shadow hash: {hash})"
-            ).format(hash=commit_hash[:7])
-        )
+        print(msgs.get("success", "✅ Snapshot saved successfully! (Shadow hash: {hash})").format(hash=commit_hash[:7]))
 
 
 def list_snapshots(group_by_branch=False, show_ai=True):
@@ -286,9 +270,7 @@ def list_snapshots(group_by_branch=False, show_ai=True):
         branches = {}
         for snap in snapshots:
             branches.setdefault(snap["branch"], []).append(snap)
-        print(
-            msgs.get("title_grouped", "\n--- Shadow Snapshots (Grouped by Branch) ---")
-        )
+        print(msgs.get("title_grouped", "\n--- Shadow Snapshots (Grouped by Branch) ---"))
         idx = 1
         flat_list = []
         for br, snaps in branches.items():
@@ -299,9 +281,7 @@ def list_snapshots(group_by_branch=False, show_ai=True):
                 fav_icon = "⭐" if snap["is_favorite"] else ""
                 notes = snap.get("notes", "")
                 notes_display = f" | {notes}" if notes else ""
-                print(
-                    f"{idx:<4} {fav_icon:<4} {snap['hash']:<8} {snap['subject']}{notes_display}"
-                )
+                print(f"{idx:<4} {fav_icon:<4} {snap['hash']:<8} {snap['subject']}{notes_display}")
                 flat_list.append(snap)
                 idx += 1
         return flat_list
@@ -320,7 +300,7 @@ def list_snapshots(group_by_branch=False, show_ai=True):
             # Truncate notes if too long
             notes_display = notes[:27] + "..." if len(notes) > 30 else notes
             print(
-                f"{i+1:<4} {fav_icon:<4} {snap['hash']:<8} {snap['branch']:<20} {snap['subject']:<25} {notes_display:<30}"
+                f"{i + 1:<4} {fav_icon:<4} {snap['hash']:<8} {snap['branch']:<20} {snap['subject']:<25} {notes_display:<30}"
             )
         return snapshots
 
@@ -345,11 +325,7 @@ def restore_snapshot():
     commit_hash = snap["hash"]
 
     print(msgs.get("options_title", "\nRestore Options:"))
-    print(
-        msgs.get(
-            "option_all", "1. Restore everything (Overwrite current working directory)"
-        )
-    )
+    print(msgs.get("option_all", "1. Restore everything (Overwrite current working directory)"))
     print(msgs.get("option_specific", "2. Restore specific file/folder"))
 
     opt = input(msgs.get("choice_prompt", "Choice (1-2): ")).strip()
@@ -439,9 +415,7 @@ def view_diff():
         return
 
     view_diff_cfg = CONFIG.get("view_diff", {})
-    choice = input(
-        view_diff_cfg.get("prompt_number", "\nEnter snapshot number to view diff: ")
-    ).strip()
+    choice = input(view_diff_cfg.get("prompt_number", "\nEnter snapshot number to view diff: ")).strip()
     if not choice.isdigit() or int(choice) < 1 or int(choice) > len(snapshots):
         return
 
@@ -494,25 +468,19 @@ def manage_snapshots():
             run_shadow_cmd(["tag", "-d", tag_name], check=False, quiet=True)
 
         print(
-            manage_cfg.get("favorite_added", "✅ {status} favorite for {hash}").format(
-                status=status, hash=commit_hash
-            )
+            manage_cfg.get("favorite_added", "✅ {status} favorite for {hash}").format(status=status, hash=commit_hash)
         )
 
     elif opt == "2":
         new_name = input(
-            manage_cfg.get(
-                "rename_prompt", "Enter new name for snapshot (current: {current}): "
-            ).format(current=snap["subject"])
+            manage_cfg.get("rename_prompt", "Enter new name for snapshot (current: {current}): ").format(
+                current=snap["subject"]
+            )
         ).strip()
         if new_name:
             meta["renamed"] = new_name
             set_snapshot_metadata(commit_hash, meta)
-            print(
-                manage_cfg.get(
-                    "rename_success", "✅ Snapshot renamed to '{name}'"
-                ).format(name=new_name)
-            )
+            print(manage_cfg.get("rename_success", "✅ Snapshot renamed to '{name}'").format(name=new_name))
 
     elif opt == "3":
         if meta.get("favorite", False):
@@ -524,18 +492,12 @@ def manage_snapshots():
             )
             return
         confirm = input(
-            manage_cfg.get("delete_confirm", "Delete snapshot {hash}? (y/n): ").format(
-                hash=commit_hash
-            )
+            manage_cfg.get("delete_confirm", "Delete snapshot {hash}? (y/n): ").format(hash=commit_hash)
         ).strip()
         if confirm.lower() == "y":
             meta["deleted"] = True
             set_snapshot_metadata(commit_hash, meta)
-            print(
-                manage_cfg.get(
-                    "delete_success", "✅ Snapshot {hash} deleted (hidden)."
-                ).format(hash=commit_hash)
-            )
+            print(manage_cfg.get("delete_success", "✅ Snapshot {hash} deleted (hidden).").format(hash=commit_hash))
 
 
 def cleanup_shadow_repo():
@@ -549,9 +511,7 @@ def cleanup_shadow_repo():
         )
     )
     # First, expire all reflogs older than 30 days
-    run_shadow_cmd(
-        ["reflog", "expire", "--expire=30.days", "refs/heads/master"], quiet=True
-    )
+    run_shadow_cmd(["reflog", "expire", "--expire=30.days", "refs/heads/master"], quiet=True)
     # Then prune unreachable objects older than 30 days
     run_shadow_cmd(["gc", "--prune=30.days"], quiet=True)
     print(msgs.get("success", "✅ Cleanup complete."))

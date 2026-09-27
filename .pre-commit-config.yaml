@@ -3,29 +3,22 @@ repos:
     rev: v4.5.0
     hooks:
       - id: trailing-whitespace
-        files: "^(src/.*\\.py|.*\\.yml|.*\\.yaml)$"
+        files: "^(src/.*\\.py|tests/.*\\.py|.*\\.yml|.*\\.yaml)$"
       - id: end-of-file-fixer
-        files: "^(src/.*\\.py|.*\\.yml|.*\\.yaml)$"
+        files: "^(src/.*\\.py|tests/.*\\.py|.*\\.yml|.*\\.yaml)$"
       - id: check-yaml
         files: "^(.*\\.yml|.*\\.yaml)$"
         args: ['--unsafe']
       - id: check-added-large-files
-        files: "^(src/.*\\.py|.*\\.yml|.*\\.yaml)$"
-  - repo: local
+        files: "^(src/.*\\.py|tests/.*\\.py|.*\\.yml|.*\\.yaml)$"
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.11.2
     hooks:
-      - id: black
-        name: black
-        entry: poetry run black
-        language: system
-        types: [python]
-        verbose: true
-      - id: flake8
-        name: flake8
-        entry: poetry run flake8
-        language: system
-        types: [python]
-        args: ['--exit-zero']
-        verbose: true
+      - id: ruff
+        args: [--fix, --exit-zero]
+        files: "^(src|tests)/.*\\.py$"
+      - id: ruff-format
+        files: "^(src|tests)/.*\\.py$"
   - repo: https://github.com/gitleaks/gitleaks
     rev: v8.18.2
     hooks:

@@ -56,9 +56,7 @@ class SnapshotManager:
         current_branch = git_ops.get_current_branch()
         repo_root = git_ops.get_repo_root()
         repo_name = os.path.basename(repo_root) if repo_root else "unknown"
-        repo_hash = (
-            hashlib.md5(repo_root.encode()).hexdigest()[:8] if repo_root else "unknown"
-        )
+        repo_hash = hashlib.md5(repo_root.encode()).hexdigest()[:8] if repo_root else "unknown"
 
         # Create commit message with metadata
         commit_msg = f"Snapshot: {timestamp}\n\nBranch: {current_branch}\nRepo: {repo_name}\nHash: {repo_hash}"
@@ -66,22 +64,15 @@ class SnapshotManager:
         # Add all changes and create commit
         git_ops.stage_worktree_for_snapshot()
         try:
-            result = git_ops.run_shadow_cmd(
-                ["commit", "-m", commit_msg], quiet=True, capture_output=True
-            )
+            result = git_ops.run_shadow_cmd(["commit", "-m", commit_msg], quiet=True, capture_output=True)
             # Check if there's nothing to commit
-            if (
-                "nothing to commit" in result.stdout
-                or "nothing to commit" in result.stderr
-            ):
+            if "nothing to commit" in result.stdout or "nothing to commit" in result.stderr:
                 return {"success": False, "message": "no changes", "hash": ""}
             # Extract just the hash from the commit output
             commit_lines = result.stdout.strip().split("\n")
             commit_hash = commit_lines[-1] if commit_lines else result.stdout.strip()
             # Get the actual commit hash
-            hash_result = git_ops.run_shadow_cmd(
-                ["rev-parse", "HEAD"], quiet=True, capture_output=True
-            )
+            hash_result = git_ops.run_shadow_cmd(["rev-parse", "HEAD"], quiet=True, capture_output=True)
             commit_hash = hash_result.stdout.strip()
         except subprocess.CalledProcessError as e:
             # Check if there's nothing to commit
@@ -101,9 +92,7 @@ class SnapshotManager:
         )
         return {"success": True, "message": "saved", "hash": commit_hash}
 
-    def get_snapshots(
-        self, group_by_branch: bool = False, show_ai: bool = True
-    ) -> List[Dict[str, Any]]:
+    def get_snapshots(self, group_by_branch: bool = False, show_ai: bool = True) -> List[Dict[str, Any]]:
         """
         Get list of snapshots
         Returns: list of snapshot dicts with hash, subject, branch, is_favorite, notes
@@ -193,40 +182,24 @@ class SnapshotManager:
             return "No changes"
 
         # Categorize files by type
-        code_files = [
-            f for f in files if f.endswith((".py", ".js", ".ts", ".java", ".cpp", ".c"))
-        ]
-        config_files = [
-            f for f in files if f.endswith((".yaml", ".yml", ".json", ".toml", ".ini"))
-        ]
+        code_files = [f for f in files if f.endswith((".py", ".js", ".ts", ".java", ".cpp", ".c"))]
+        config_files = [f for f in files if f.endswith((".yaml", ".yml", ".json", ".toml", ".ini"))]
         doc_files = [f for f in files if f.endswith((".md", ".txt", ".rst", ".doc"))]
-        test_files = [
-            f
-            for f in files
-            if "test" in f.lower() or f.endswith((".test.py", "_test.py", ".spec.js"))
-        ]
+        test_files = [f for f in files if "test" in f.lower() or f.endswith((".test.py", "_test.py", ".spec.js"))]
 
         parts = []
 
         if code_files:
-            parts.append(
-                f"updated {len(code_files)} code file{'s' if len(code_files) != 1 else ''}"
-            )
+            parts.append(f"updated {len(code_files)} code file{'s' if len(code_files) != 1 else ''}")
 
         if config_files:
-            parts.append(
-                f"modified {len(config_files)} config file{'s' if len(config_files) != 1 else ''}"
-            )
+            parts.append(f"modified {len(config_files)} config file{'s' if len(config_files) != 1 else ''}")
 
         if doc_files:
-            parts.append(
-                f"updated {len(doc_files)} doc file{'s' if len(doc_files) != 1 else ''}"
-            )
+            parts.append(f"updated {len(doc_files)} doc file{'s' if len(doc_files) != 1 else ''}")
 
         if test_files:
-            parts.append(
-                f"added {len(test_files)} test{'s' if len(test_files) != 1 else ''}"
-            )
+            parts.append(f"added {len(test_files)} test{'s' if len(test_files) != 1 else ''}")
 
         # If no specific categories, just count total files
         if not parts:
@@ -291,9 +264,7 @@ class SnapshotManager:
 
         return {"success": True, "message": "deleted"}
 
-    def delete_snapshots_up_to(
-        self, snapshots: List[Dict[str, Any]], index: int
-    ) -> int:
+    def delete_snapshots_up_to(self, snapshots: List[Dict[str, Any]], index: int) -> int:
         """Delete snapshots from index 0 to index (inclusive)"""
         if index < 0 or index >= len(snapshots):
             return 0

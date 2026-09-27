@@ -91,9 +91,7 @@ def cleanup_old_snapshots():
 
         # Validate cleanup_days parameter
         if not isinstance(cleanup_days, int) or cleanup_days <= 0:
-            print(
-                f"⚠️  Invalid cleanup_days in config: {cleanup_days}. Using default 90."
-            )
+            print(f"⚠️  Invalid cleanup_days in config: {cleanup_days}. Using default 90.")
             cleanup_days = 90
 
         snapshot_manager = get_snapshot_manager()
